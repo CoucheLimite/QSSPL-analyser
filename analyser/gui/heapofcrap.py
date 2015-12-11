@@ -34,7 +34,8 @@ import sys
 import os
 
 from numpy import *
-import matplotlib.pylab as plt
+
+import collections
 from string import find
 from models.ConstantsClass import *
 from CanvasClass import *
@@ -646,13 +647,17 @@ class Analyser(wx.Frame, Constants):
         """ Open a file"""
 
         self.DataSet = int(e.GetId())
-        input_dic = {'All Files': '*',
-                     'Old QSSPL': '*_Raw Data.dat',
-                     'New QSSPL': '*.Raw Data.dat',
-                     'Temp Dep': '*.tsv'
-                     }
-
-        ext_options = '|'.join([key + "|" + val for key, val in input_dic.items()])
+        input_dic = collections.OrderedDict()
+        # add what should appear as wild cards, in order
+        input_dic['All Raw data Files']= '*Data.dat;*.tsv'
+        input_dic['Old QSSPL']= '*_Raw Data.dat'
+        input_dic['New QSSPL']= '*.Raw Data.dat'
+        input_dic['Temp Dep']= '*.tsv'
+        
+        #make into format or wild cards
+        ext_options = '|'.join(
+            [key + "|" + val for key, val in input_dic.items()])
+        
         dlg = wx.FileDialog(self, "Choose a file", self.dirname, "",
                             ext_options, wx.OPEN)
 
