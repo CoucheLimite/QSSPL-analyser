@@ -13,7 +13,7 @@ Things to improve:
     Make that you can't load incorrect values (int and floats at least)
 """
 
-from gui.heapofcrap import Analyser
+from gui.heapofcrap2 import Analyser
 import wx
 
 

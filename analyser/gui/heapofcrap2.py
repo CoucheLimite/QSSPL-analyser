@@ -41,8 +41,8 @@ from models.ConstantsClass import *
 from CanvasClass import *
 
 
-import models.Mobility as Mobility
-from analysis.analysis import Data
+from models.MobilityV2 import Mobility_Klassen as Mobility
+from analysis.analysisV2 import Data
 from models.NumericalDifferentiation_windows import Finite_Difference, Regularisation
 from models.Recombination_v2_01 import Radiative
 
@@ -259,7 +259,7 @@ class Analyser(wx.Frame, Constants):
         self.Reflection_Heading = self.onWidgetSetup(wx.StaticText(
             self.waferdetails, label="Ref (%)", style=wx.ALIGN_CENTRE), self.AnalyseFiles_Box_contence, 0, 4)
         self.Wavelength_Heading = self.onWidgetSetup(wx.StaticText(
-            self.waferdetails, label=" \t ", style=wx.ALIGN_CENTRE), self.AnalyseFiles_Box_contence, 0, 5)
+            self.waferdetails, label="Temp (K)", style=wx.ALIGN_CENTRE), self.AnalyseFiles_Box_contence, 0, 5)
         self.Crop_Heading = self.onWidgetSetup(wx.StaticText(
             self.waferdetails, label="Crop (%)", style=wx.ALIGN_CENTRE), self.AnalyseFiles_Box_contence, 0, 6)
         self.Binning_Heading = self.onWidgetSetup(wx.StaticText(
@@ -436,7 +436,8 @@ class Analyser(wx.Frame, Constants):
             1e15), name="Ai" + Suffix), self.AnalyseFiles_Box_contence, row2, 3)
         Reflection = self.onWidgetSetup(wx.TextCtrl(self.waferdetails, value=str(
             10), name="Reflection" + Suffix), self.AnalyseFiles_Box_contence, row2, 4)
-        # Wavelength          = self.onWidgetSetup(wx.TextCtrl(self.waferdetails,value=str(808),name = "Wavelength" + Suffix)              ,self.AnalyseFiles_Box_contence   ,row2,5)
+        Temp = self.onWidgetSetup(wx.TextCtrl(self.waferdetails, value=str(
+            300), name="Temp" + Suffix), self.AnalyseFiles_Box_contence, row2, 5)
         CropStart = self.onWidgetSetup(wx.TextCtrl(self.waferdetails, value=str(
             0), name="CropStart" + Suffix), self.AnalyseFiles_Box_contence, row, 6)
         CropEnd = self.onWidgetSetup(wx.TextCtrl(self.waferdetails, value=str(
@@ -454,7 +455,7 @@ class Analyser(wx.Frame, Constants):
 
         "Bindings"
 
-        labels = [Fs, Ai, CropStart, Reflection, CropStart, CropEnd, Binning]
+        labels = [Fs, Ai, CropStart, Reflection, Temp, CropStart, CropEnd, Binning]
 
         LoadFileButton.Bind(wx.EVT_BUTTON, self.LoadRawDataFile)
 
@@ -471,7 +472,7 @@ class Analyser(wx.Frame, Constants):
 
         # Makeing the name of the Text screen that is being updated
         names = ['LoadFileButton', 'LoadFileText', 'Fs', 'Ai',
-                 'Reflection', 'CropStart', 'CropEnd', 'Binning']
+                 'Reflection', 'Temp', 'CropStart', 'CropEnd', 'Binning']
 
         for name in names:
             ControlName = name + str(num)
@@ -481,14 +482,6 @@ class Analyser(wx.Frame, Constants):
 
         self.waferdetails.Fit()
 
-        """"""
-        #self.number_of_buttons += 1
-        #label = "Button %s" %  self.number_of_buttons
-        #name = "button%s" % self.number_of_buttons
-        #new_button = wx.Button(self, label=label, name=name)
-        #self.widgetSizer.Add(new_button, 0, wx.ALL, 5)
-        # self.frame.fSizer.Layout()
-        # self.frame.Fit()
 
     def CheckboxBinderChangeProcessed(self, name):
         name.Bind(wx.EVT_CHECKBOX, self.CheckBoxChanged)
@@ -520,10 +513,10 @@ class Analyser(wx.Frame, Constants):
             return handel.iVoc()
 
         elif(String == u"\u0394\u03C3"):
-            return handel.Data['PC'], handel.DeltaN_PL * self.q * Mobility.Sum(handel.n0, handel.p0, handel.DeltaN_PL) * handel.Wafer['Thickness']
+            return handel.Data['PC'], handel.DeltaN_PL * self.q * Mobility().mobility_sum(handel.DeltaN_PL, handel.n0, handel.p0, handel.Wafer['Temp']) * handel.Wafer['Thickness']
 
         elif(String == u"\u03C3"):
-            return handel.Raw_PCEdited + handel.DarkConductance, handel.DeltaN_PL * self.q * Mobility.Sum(handel.n0, handel.p0, handel.DeltaN_PL) * handel.Thickness + handel.DarkConductance
+            return handel.Raw_PCEdited + handel.DarkConductance, handel.DeltaN_PL * self.q * Mobility().mobility_sum(handel.DeltaN_PL, handel.n0, handel.p0, handel.Wafer['Temp']) * handel.Thickness + handel.DarkConductance
 
         elif(String == 'Ideality Factor'):
             return handel.Local_IdealityFactor()
@@ -648,15 +641,15 @@ class Analyser(wx.Frame, Constants):
         self.DataSet = int(e.GetId())
         input_dic = collections.OrderedDict()
         # add what should appear as wild cards, in order
-        input_dic['All Raw data Files']= '*Data.dat;*.tsv'
-        input_dic['Old QSSPL']= '*_Raw Data.dat'
-        input_dic['New QSSPL']= '*.Raw Data.dat'
-        input_dic['Temp Dep']= '*.tsv'
-        
-        #make into format or wild cards
+        input_dic['All Raw data Files'] = '*Data.dat;*.tsv'
+        input_dic['Old QSSPL'] = '*_Raw Data.dat'
+        input_dic['New QSSPL'] = '*.Raw Data.dat'
+        input_dic['Temp Dep'] = '*.tsv'
+
+        # make into format or wild cards
         ext_options = '|'.join(
             [key + "|" + val for key, val in input_dic.items()])
-        
+
         dlg = wx.FileDialog(self, "Choose a file", self.dirname, "",
                             ext_options, wx.OPEN)
 
@@ -752,8 +745,8 @@ class Analyser(wx.Frame, Constants):
             a = self.Files[j]
             if (a.Used == True):
 
-                for i in ['Fs', 'Ai', 'Reflection', 'CropStart', 'CropEnd']:
-                # print i
+                for i in ['Fs', 'Ai', 'Reflection', 'Temp', 'CropStart', 'CropEnd']:
+                    # print i
                     a.Wafer[i] = float(
                         self.waferdetails.FindWindowByName(i + str(j)).GetValue())
 

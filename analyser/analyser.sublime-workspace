@@ -4,6 +4,18 @@
 		"selected_items":
 		[
 			[
+				"inp",
+				"input_dic	statement"
+			],
+			[
+				"Ra",
+				"RawDataFile	statement"
+			],
+			[
+				"it",
+				"iteritems	function"
+			],
+			[
 				"wr",
 				"WriteTo_Inf_File"
 			],
@@ -460,29 +472,18 @@
 	"buffers":
 	[
 		{
-			"file": "/C/git/ui/pvapp/multimeasure.py",
+			"file": "/C/Users/z3186867/Dropbox/CommonCode/PlottingForPublications/PlotMyShit.py",
 			"settings":
 			{
-				"buffer_size": 12012,
-				"line_ending": "Windows"
+				"buffer_size": 8513,
+				"line_ending": "Unix"
 			}
 		},
 		{
-			"contents": "\"\"\"\nThis is a GUI for the QSSPL system. It interfaces with USB6356 NI DAQ card.\nCurrently it is assumed that the NI card is Dev3, and it reads three channels\nand outputs on 1. This could all be changed, but i'm not sure why I want to\nyet.\n\n    To use this the NI drives need to be installed!\n\nThings to improve:\n\n    Definition of Dev/ and channels\n    Selectable inputs and output voltage ranges.\n    Make that you can't load incorrect values (int and floats at least)\n\"\"\"\n\nfrom gui.heapofcrap import Analyser\nimport wx\n\n\ndef main():\n\n    # False stands for?\n    app = wx.App(False)\n    Analyser(False)\n    app.MainLoop()\n\nif __name__ == \"__main__\":\n    main()\n",
-			"file": "main.py",
-			"file_size": 688,
-			"file_write_time": 130942695323296361,
+			"file": "gui/heapofcrap.py",
 			"settings":
 			{
-				"buffer_size": 662,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "gui/GUIController.py",
-			"settings":
-			{
-				"buffer_size": 1768,
+				"buffer_size": 32317,
 				"line_ending": "Unix"
 			}
 		},
@@ -490,31 +491,7 @@
 			"file": "utils/importexport.py",
 			"settings":
 			{
-				"buffer_size": 10544,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "/C/git/ui/pvapp/util/utils.py",
-			"settings":
-			{
-				"buffer_size": 2388,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "/C/git/ui/pvapp/hardware/MeasurementHandler.py",
-			"settings":
-			{
-				"buffer_size": 3167,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "/C/git/ui/pvapp/hardware/daq.py",
-			"settings":
-			{
-				"buffer_size": 10639,
+				"buffer_size": 10509,
 				"line_ending": "Windows"
 			}
 		},
@@ -527,10 +504,10 @@
 			}
 		},
 		{
-			"file": "/C/git/ui/pvapp/gui/GUIController.py",
+			"file": "main.py",
 			"settings":
 			{
-				"buffer_size": 24481,
+				"buffer_size": 662,
 				"line_ending": "Windows"
 			}
 		}
@@ -2238,13 +2215,27 @@
 	},
 	"expanded_folders":
 	[
-		"/C/git/ui",
-		"/C/git/ui/pvapp",
-		"/C/git/ui/pvapp/gui",
-		"/C/git/ui/pvapp/util"
+		"/C/Users/z3186867/Dropbox/CommonCode/OfflineQSSPL/analyser",
+		"/C/Users/z3186867/Dropbox/CommonCode/OfflineQSSPL/analyser/gui",
+		"/C/Users/z3186867/Dropbox/CommonCode/OfflineQSSPL/analyser/utils"
 	],
 	"file_history":
 	[
+		"/C/Users/z3186867/Dropbox/CommonCode/OfflineQSSPL/.gitignore",
+		"/C/git/ui/pvapp/gui/GUIController.py",
+		"/C/Users/z3186867/Dropbox/CommonCode/OfflineQSSPL/test.py",
+		"/C/Users/z3186867/Dropbox/CommonCode/OfflineQSSPL/analyser/gui/heapofcrap.py",
+		"/C/Users/z3186867/Dropbox/CommonCode/OfflineQSSPL/analyser/models/ConstantsClass.py",
+		"/C/Users/z3186867/Dropbox/CommonCode/OfflineQSSPL/analyser/analysis/analysis.py",
+		"/C/Users/z3186867/Dropbox/CommonCode/OfflineQSSPL/analyser/main.py",
+		"/C/git/ui/pvapp/multimeasure.py",
+		"/C/git/ui/pvapp/hardware/daq.py",
+		"/C/git/ui/pvapp/hardware/MeasurementHandler.py",
+		"/C/git/ui/pvapp/util/utils.py",
+		"/C/git/ui/pvapp/test/data/raw_test_data.dat",
+		"/C/git/ui/pvapp/test/data/raw_test_data.tsv",
+		"/C/git/ui/pvapp/test/data/test_data.tsv",
+		"/C/Users/z3186867/Dropbox/CommonCode/OfflineQSSPL/analyser/gui/GUIController.py",
 		"/C/Users/z3186867/Dropbox/CommonCode/OfflineQSSPL - Copy/OfflineQSSPL_V3_windows.py",
 		"/C/Users/z3186867/Dropbox/CommonCode/OfflineQSSPL/analyser/gui/OfflineQSSPL_V3_windows.py",
 		"/C/Users/z3186867/Dropbox/My Python/wxpython/OfflineQSSPL/CurrentPortable/test.py",
@@ -2252,11 +2243,8 @@
 		"/C/Users/z3186867/Dropbox/My Python/wxpython/OfflineQSSPL/CurrentPortable/ImportQSSFiles.py",
 		"/C/git/ui/pvapp/test/data/test_data.json",
 		"/C/git/ui/pvapp/test/data/test_data.inf",
-		"/C/git/ui/pvapp/test/data/raw_test_data.tsv",
-		"/C/git/ui/pvapp/test/data/raw_test_data.dat",
 		"/C/Python27/lib/site-packages/numpy/lib/_datasource.py",
 		"/D/BackUp/30042013/PHD/Measurements/PHD/QSSPL/QSSPL_Sensitivity/20150626_SystemNoise/20160626_Grounding/AddedNoise_Standard_1.Raw Data.dat",
-		"/C/git/ui/pvapp/hardware/MeasurementHandler.py",
 		"/C/git/ui/pvapp/main.py",
 		"/C/Users/z3186867/Dropbox/Writing/PHD/PhD_Thesis_Markdown/chapters/pandoc-config.json",
 		"/C/Users/z3186867/Dropbox/Mendeley/library.bib",
@@ -2360,19 +2348,7 @@
 		"/D/Drive/PhD/Experiments/Temperature Photoluminesence/FittingAbsorptionCoef/Model.py",
 		"/D/Drive/PhD/Experiments/Temperature Photoluminesence/FittingAbsorptionCoef/Corkish1993.py",
 		"/C/Users/z3186867/Dropbox/CommonCode/semiconductor/optical/Si/Silicon_Daub1995",
-		"/C/Users/z3186867/Dropbox/CommonCode/semiconductor/optical/Si/Silicon_Daub",
-		"/C/Users/z3186867/Dropbox/Writing/PHD/PhD_Thesis_Markdown/chapters/Symbols_table.md",
-		"/D/Drive/PhD/Experiments/Temperature Photoluminesence/FittingAbsorptionCoef/absorptioncoefficient.const",
-		"/C/Users/z3186867/Dropbox/CommonCode/semiconductor/optical/silicon/absorptioncoefficient.const",
-		"/C/Users/z3186867/Dropbox/Writing/PHD/PhD_Thesis_Markdown/Images/EQEPL/Electrical_Paramters/MakePlots.py",
-		"/C/Users/z3186867/Dropbox/Writing/PHD/PhD_Thesis_Markdown/CriticMarkup_html.py",
-		"/C/Users/z3186867/Dropbox/Writing/PHD/PhD_Thesis_Markdown/chapters/To_word.html",
-		"/C/Users/z3186867/Dropbox/Writing/PHD/PhD_Thesis_Markdown/Images/Deviations/Temperature/Temperature_change_PL.py",
-		"/C/Users/z3186867/Dropbox/CommonCode/PlottingForPublications/PlotMyShit.py",
-		"/C/Users/z3186867/Dropbox/Writing/PHD/PhD_Thesis_Markdown/Images/Experimental_Absorptance/makeplots.py",
-		"/C/Users/z3186867/Dropbox/Writing/PHD/PhD_Thesis_Markdown/Images/Equiptment/PLiExperimental/FlatField/FF_images.py",
-		"/D/Drive/PhD/Experiments/Temperature Photoluminesence/FittingAbsorptionCoef/AbsorptionTheory.md",
-		"/C/Users/z3186867/Dropbox/Writing/PHD/PhD_Thesis_Markdown/Revisions/20150815_EquiptmentV2.md"
+		"/C/Users/z3186867/Dropbox/CommonCode/semiconductor/optical/Si/Silicon_Daub"
 	],
 	"find":
 	{
@@ -2391,6 +2367,20 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			".dat",
+			"Dic",
+			"Dict",
+			"dict",
+			"orde",
+			"print",
+			"Load_QSSPL_File_Python",
+			"dirname",
+			"ProvideRawDataFile",
+			"CanvasClass",
+			"find_nearest",
+			"SplitName",
+			"Finite_Difference",
+			"sys",
 			"wx",
 			"optimize",
 			"Constants",
@@ -2504,21 +2494,7 @@
 			"title",
 			"Western",
 			"Ned ",
-			"tableofcontents",
-			"includegraphics",
-			"ttitle",
-			"make",
-			"header-includes",
-			"template",
-			"ackn",
-			"acknol",
-			"bib",
-			"biblio",
-			"begin",
-			"template",
-			"header",
-			"arctan",
-			"ax[0][0]"
+			"tableofcontents"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -2669,209 +2645,81 @@
 			[
 				{
 					"buffer": 0,
-					"file": "/C/git/ui/pvapp/multimeasure.py",
+					"file": "/C/Users/z3186867/Dropbox/CommonCode/PlottingForPublications/PlotMyShit.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 12012,
+						"buffer_size": 8513,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								7048,
-								7052
+								2498,
+								2498
 							]
 						],
 						"settings":
 						{
-							"WordCountShouldRun": false,
 							"WordCountSyntax": "python",
 							"syntax": "Packages/Python/Python.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 2318.0,
+						"translation.y": 702.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 7,
+					"stack_index": 2,
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "main.py",
+					"file": "gui/heapofcrap.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 662,
+						"buffer_size": 32317,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								559,
-								559
+								27903,
+								27903
 							]
 						],
 						"settings":
 						{
-							"WordCountShouldRun": false,
-							"WordCountSyntax": "python",
-							"syntax": "Packages/Python/Python.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "gui/GUIController.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1768,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								973,
-								973
-							]
-						],
-						"settings":
-						{
-							"WordCountShouldRun": false,
 							"WordCountSyntax": "python",
 							"syntax": "Packages/Python/Python.tmLanguage",
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 338.0,
+						"translation.y": 8125.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
 					"type": "text"
 				},
 				{
-					"buffer": 3,
+					"buffer": 2,
 					"file": "utils/importexport.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 10544,
+						"buffer_size": 10509,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								8554,
-								8571
-							]
-						],
-						"settings":
-						{
-							"WordCountShouldRun": false,
-							"WordCountSyntax": "python",
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 3536.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "/C/git/ui/pvapp/util/utils.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2388,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								112,
-								112
-							]
-						],
-						"settings":
-						{
-							"WordCountShouldRun": false,
-							"WordCountSyntax": "python",
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 6,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "/C/git/ui/pvapp/hardware/MeasurementHandler.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3167,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								305,
-								305
-							]
-						],
-						"settings":
-						{
-							"WordCountShouldRun": false,
-							"WordCountSyntax": "python",
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "/C/git/ui/pvapp/hardware/daq.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 10639,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								273,
-								273
+								9008,
+								9012
 							]
 						],
 						"settings":
@@ -2882,10 +2730,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 3618.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 8,
+					"stack_index": 3,
 					"type": "text"
 				}
 			]
@@ -2895,7 +2743,7 @@
 			"sheets":
 			[
 				{
-					"buffer": 7,
+					"buffer": 3,
 					"file": "/C/git/ui/pvapp/main.py",
 					"semi_transient": false,
 					"settings":
@@ -2913,6 +2761,35 @@
 						],
 						"settings":
 						{
+							"WordCountSyntax": "python",
+							"syntax": "Packages/Python/Python.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "main.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 662,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								662,
+								662
+							]
+						],
+						"settings":
+						{
 							"WordCountShouldRun": false,
 							"WordCountSyntax": "python",
 							"syntax": "Packages/Python/Python.tmLanguage"
@@ -2921,39 +2798,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 8,
-					"file": "/C/git/ui/pvapp/gui/GUIController.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 24481,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1044,
-								635
-							]
-						],
-						"settings":
-						{
-							"WordCountShouldRun": false,
-							"WordCountSyntax": "python",
-							"syntax": "Packages/Python/Python.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
+					"stack_index": 0,
 					"type": "text"
 				}
 			]
@@ -2987,7 +2832,7 @@
 		"cols":
 		[
 			0.0,
-			0.5,
+			0.457785467128,
 			1.0
 		],
 		"rows":
@@ -3041,7 +2886,7 @@
 		[
 			[
 				"",
-				"C:\\Users\\z3186867\\Dropbox\\Latex\\PHD\\PhD_Thesis_Markdown\\PHD_markdown.sublime-project"
+				"C:\\Users\\z3186867\\Dropbox\\Writing\\PHD\\PhD_Thesis_Markdown\\PHD_markdown.sublime-project"
 			]
 		],
 		"width": 380.0
@@ -3059,7 +2904,7 @@
 		],
 		"width": 1148.0
 	},
-	"selected_group": 0,
+	"selected_group": 1,
 	"settings":
 	{
 	},
