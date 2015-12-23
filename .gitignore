@@ -14,7 +14,8 @@ $RECYCLE.BIN/
 *.pyc
 *.msm
 *.msp
-*.sublime*
+*.sublime-project
+*.sublime-workspace
 
 # Windows shortcuts
 *.lnk
