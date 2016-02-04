@@ -13,7 +13,8 @@ class Load_QSSPL_File_LabView():
         self.RawDataFile = RawDataFile
 
     def Load_RawData_File(self):
-        return np.genfromtxt(self.Directory + self.RawDataFile, names=('Time', 'PC', 'Gen', 'PL'))
+        return np.genfromtxt(os.path.join(self.Directory, self.RawDataFile),
+                             names=('Time', 'PC', 'Gen', 'PL'))
 
     def Load_InfData_File(self):
         InfFile = self.RawDataFile[:-13] + '.inf'
@@ -157,7 +158,7 @@ class Load_QSSPL_File_Python():
         for i in s.split('\n')[2:-1]:
             # print i.split(':\t')[1]
             List[i.split(':\t')[0].strip()] = self.num(i.split(':\t')[1])
-        # print List
+        print List
 
         return List
 
@@ -295,7 +296,7 @@ class TempDep_loads():
     def get_inf_name(self):
 
         if self.RawDataFile.count('.tsv') == 1:
-            InfFile = self.RawDataFile.replace('.tsv', '.inf')
+            InfFile = self.RawDataFile.replace('.tsv', '.json')
         else:
             print 'stop fucking around with the name!!'
 
@@ -360,4 +361,3 @@ if __name__ == "__main__":
 
     dictr = B.Load_InfData_File()
     B.WriteTo_Inf_File(dictr)
-

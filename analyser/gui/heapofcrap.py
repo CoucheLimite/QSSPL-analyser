@@ -41,15 +41,15 @@ from models.ConstantsClass import *
 from CanvasClass import *
 
 
-import models.Mobility as Mobility
+from models.MobilityV2 import Mobility_Klassen as Mobility
 from analysis.analysis import Data
-from models.NumericalDifferentiation_windows import Finite_Difference, Regularisation
-from models.Recombination_v2_01 import Radiative
 
 from utils.importexport import LoadData
 
+from models.models import models_handeller
 
-def SplitName(FileName,  separator, suffix, block):
+
+def SplitName(FileName, separator, suffix, block):
 
     if len(FileName.strip().split(separator)) > block:
         return FileName.strip().split(separator)[block] + str(suffix)
@@ -60,6 +60,9 @@ def SplitName(FileName,  separator, suffix, block):
 class Analyser(wx.Frame, Constants):
 
     def __init__(self, *args, **kw):
+
+        self.model_handeller = models_handeller()
+
         wx.Frame.__init__(
             self, None, -1, "EQE", size=(wx.DisplaySize()[0] * .9, wx.DisplaySize()[1] * .9))
         self.dirname = '/media/User Files/BackUp/30042013/PHD/Measurements/PHD/QSSPL'
@@ -80,6 +83,7 @@ class Analyser(wx.Frame, Constants):
 
         menubar = wx.MenuBar()
         OutputOptions = wx.Menu()
+
         self.Ouput_Lifetime = OutputOptions.Append(
             101, 'Lifetime', 'Outputs Deltan tau Data', wx.ITEM_CHECK)
         self.Ouput_SunsVoc = OutputOptions.Append(
@@ -87,10 +91,47 @@ class Analyser(wx.Frame, Constants):
         self.Ouput_LocalIdealityFactor = OutputOptions.Append(
             103, 'Local Ideality Factor', 'Outputs  Generation iVoc', wx.ITEM_CHECK)
         OutputOptions.AppendSeparator()
+
+        # now create a menu, with all the options passed
+        # from the models class.
+        self.models_menu = wx.Menu()
+
+        # the list where the menu and menuitems are going to be stored
+        for model_type in self.model_handeller.available_models.keys():
+
+            temp = wx.Menu()
+            for model in self.model_handeller.available_models[model_type]:
+                temp.Append(wx.ID_ANY,
+                            model,
+                            ' a model',
+                            wx.ITEM_RADIO)
+                if self.model_handeller.selected_model == model:
+                    temp.check()
+
+            self.models_menu.AppendMenu(wx.ID_ANY, model_type, temp)
+
+        # need to bind them to change the models with appropriate
+        self.Bind(wx.EVT_MENU, self.changed_a_model)
+
+        # names for menus
         menubar.Append(OutputOptions, '&Output Options')
+        menubar.Append(self.models_menu, '&Choose your models')
+
         self.SetMenuBar(menubar)
+
         self.CreateStatusBar()
         self.Ouput_Lifetime.Check(True)
+
+    def changed_a_model(self, e):
+
+        # updates the model handeller with the selected model
+        for model_type in self.models_menu.GetMenuItems():
+
+            for model in model_type.GetSubMenu().GetMenuItems():
+                if model.IsChecked():
+                    self.model_handeller.selected_model[
+                        model_type.GetText()] = model.GetText()
+        pass
 
     def InitUI(self):
         global Fig1, Fig2
@@ -124,7 +165,7 @@ class Analyser(wx.Frame, Constants):
         self.scrolling.SetSizer(sizer)
         self.scrolling.SetScrollRate(10, 10)
 
-    def onWidgetSetup(self, widget,   sizer, row, column):
+    def onWidgetSetup(self, widget, sizer, row, column):
         #widget.Bind(event, handler)
         sizer.Add(widget, (row, column), flag=wx.ALL, border=10)
         return widget
@@ -157,7 +198,7 @@ class Analyser(wx.Frame, Constants):
             self.waferdetails, value=str(self.Const)), SintonCalibration_Box_contence, 1, 3)
 
         # Arranging items
-        self.sizar.Add(SintonCalibration_box,           (0, 0), (2, 2),
+        self.sizar.Add(SintonCalibration_box, (0, 0), (2, 2),
                        flag=wx.ALL | wx.EXPAND | wx.ALIGN_CENTER_HORIZONTAL, border=20)
         # Adding them to a sizer
         SintonCalibration_box.Add(SintonCalibration_Box_contence)
@@ -179,7 +220,7 @@ class Analyser(wx.Frame, Constants):
 
         # Adding box
         AnaylsisBox_box = wx.StaticBoxSizer(self.AnaylsisBox, wx.VERTICAL)
-        self.sizar.Add(AnaylsisBox_box,           (0, 2), (1, 2),
+        self.sizar.Add(AnaylsisBox_box, (0, 2), (1, 2),
                        flag=wx.ALL | wx.EXPAND | wx.ALIGN_CENTER_HORIZONTAL, border=20)
         AnaylsisBox_box.Add(Anaylsis_Box_contence)
 
@@ -207,7 +248,7 @@ class Analyser(wx.Frame, Constants):
         # Adding box
         self.Plotting_Choice_Box = wx.StaticBoxSizer(
             self.Plotting_Choice, wx.VERTICAL)
-        self.sizar.Add(self.Plotting_Choice_Box,           (2, 2), (1, 2),
+        self.sizar.Add(self.Plotting_Choice_Box, (2, 2), (1, 2),
                        flag=wx.ALL | wx.EXPAND | wx.ALIGN_CENTER_HORIZONTAL, border=20)
 
         self.Plotting_Choice_Box.Add(Plotting_Choice_Box_contence)
@@ -235,7 +276,7 @@ class Analyser(wx.Frame, Constants):
         # Placing Wafer Coefficients box
         self.GloablWafer_sizer = wx.StaticBoxSizer(
             self.GlobalWaferProperties_Box, wx.VERTICAL)
-        self.sizar.Add(self.GloablWafer_sizer,           (2, 0), (2, 2),
+        self.sizar.Add(self.GloablWafer_sizer, (2, 0), (2, 2),
                        flag=wx.ALL | wx.EXPAND | wx.ALIGN_CENTER_HORIZONTAL, border=20)
 
         self.GloablWafer_sizer.Add(GlobalWafer_Box_contence)
@@ -253,23 +294,30 @@ class Analyser(wx.Frame, Constants):
         self.AnalyseFiles_Box_contence = wx.GridBagSizer()
 
         self.Fs_Heading = self.onWidgetSetup(wx.StaticText(
-            self.waferdetails, label="Fs", style=wx.ALIGN_CENTRE), self.AnalyseFiles_Box_contence, 0, 2)
+            self.waferdetails, label="Fs", style=wx.ALIGN_CENTRE),
+            self.AnalyseFiles_Box_contence, 0, 2)
         self.Ai_Heading = self.onWidgetSetup(wx.StaticText(
-            self.waferdetails, label="Ai ", style=wx.ALIGN_CENTRE), self.AnalyseFiles_Box_contence, 0, 3)
+            self.waferdetails, label="Ai ", style=wx.ALIGN_CENTRE),
+            self.AnalyseFiles_Box_contence, 0, 3)
         self.Reflection_Heading = self.onWidgetSetup(wx.StaticText(
-            self.waferdetails, label="Ref (%)", style=wx.ALIGN_CENTRE), self.AnalyseFiles_Box_contence, 0, 4)
+            self.waferdetails, label="Ref (%)", style=wx.ALIGN_CENTRE),
+            self.AnalyseFiles_Box_contence, 0, 4)
         self.Wavelength_Heading = self.onWidgetSetup(wx.StaticText(
-            self.waferdetails, label=" \t ", style=wx.ALIGN_CENTRE), self.AnalyseFiles_Box_contence, 0, 5)
+            self.waferdetails, label="Temp (K)", style=wx.ALIGN_CENTRE),
+            self.AnalyseFiles_Box_contence, 0, 5)
         self.Crop_Heading = self.onWidgetSetup(wx.StaticText(
-            self.waferdetails, label="Crop (%)", style=wx.ALIGN_CENTRE), self.AnalyseFiles_Box_contence, 0, 6)
+            self.waferdetails, label="Crop (%)", style=wx.ALIGN_CENTRE),
+            self.AnalyseFiles_Box_contence, 0, 6)
         self.Binning_Heading = self.onWidgetSetup(wx.StaticText(
-            self.waferdetails, label="Points binned", style=wx.ALIGN_CENTRE), self.AnalyseFiles_Box_contence, 0, 7)
+            self.waferdetails, label="Points binned", style=wx.ALIGN_CENTRE),
+            self.AnalyseFiles_Box_contence, 0, 7)
 
         # Place box and create sizers
         self.AnalyseFiles_Box_sizer = wx.StaticBoxSizer(
             self.AnalyseFiles_Box, wx.VERTICAL)
-        self.sizar.Add(self.AnalyseFiles_Box_sizer,           (7, 0), (1, 4),
-                       flag=wx.ALL | wx.EXPAND | wx.ALIGN_CENTER_HORIZONTAL, border=20)
+        self.sizar.Add(self.AnalyseFiles_Box_sizer, (7, 0), (1, 4),
+                       flag=wx.ALL | wx.EXPAND | wx.ALIGN_CENTER_HORIZONTAL,
+                       border=20)
 
         self.AnalyseFiles_Box_sizer.Add(self.AnalyseFiles_Box_contence)
 
@@ -278,13 +326,17 @@ class Analyser(wx.Frame, Constants):
 
         # Processes Things
 
-        #self.sizar.Add(self.waferdetails.TextLoadFiles,                (5,0)    ,flag=wx.ALL|wx.GROW|wx.ALIGN_CENTER,border=10)
+        # self.sizar.Add(self.waferdetails.TextLoadFiles,(5,0)    ,
+            # flag=wx.ALL|wx.GROW|wx.ALIGN_CENTER,border=10)
         self.sizar.Add(self.AddButton,
-                       (5, 0), (1, 1), flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER, border=10)
+                       (5, 0), (1, 1), flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER,
+                       border=10)
         self.sizar.Add(self.RemoveButton,
-                       (5, 1), (1, 1), flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER, border=10)
+                       (5, 1), (1, 1), flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER,
+                       border=10)
         self.sizar.Add(self.ExportButton,
-                       (5, 2), (1, 1), flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER, border=10)
+                       (5, 2), (1, 1), flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER,
+                       border=10)
 
         self.InputPCGraph = wx.CheckBox(self.waferdetails, -1, 'Show PC Data')
         self.InputPLGraph = wx.CheckBox(self.waferdetails, -1, 'Show PL Data')
@@ -300,15 +352,15 @@ class Analyser(wx.Frame, Constants):
         self.InputCommonScale.SetValue(True)
         self.Legend.SetValue(False)
 
-        self.sizar.Add(self.InputPCGraph,                 (8, 0),
+        self.sizar.Add(self.InputPCGraph, (8, 0),
                        flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER, border=10)
-        self.sizar.Add(self.InputPLGraph,                 (8, 1),
+        self.sizar.Add(self.InputPLGraph, (8, 1),
                        flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER, border=10)
-        self.sizar.Add(self.InputSystemGraph,             (9, 0),
+        self.sizar.Add(self.InputSystemGraph, (9, 0),
                        flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER, border=10)
-        self.sizar.Add(self.InputCommonScale,             (9, 1),
+        self.sizar.Add(self.InputCommonScale, (9, 1),
                        flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER, border=10)
-        self.sizar.Add(self.Legend,                       (10, 0),
+        self.sizar.Add(self.Legend, (10, 0),
                        flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER, border=10)
 
         # Binds
@@ -427,34 +479,58 @@ class Analyser(wx.Frame, Constants):
 
         # Then need to add extra buttons
         LoadFileButton = self.onWidgetSetup(wx.Button(
-            self.waferdetails, label="Load Data", name="LoadFileButton" + Suffix, id=Id), self.AnalyseFiles_Box_contence, row, 0)
+            self.waferdetails, label="Load Data",
+            name="LoadFileButton" + Suffix, id=Id),
+            self.AnalyseFiles_Box_contence, row, 0)
         LoadFileText = wx.TextCtrl(
-            self.waferdetails, value="Loaded Dummy Name", name="LoadFileText" + Suffix)
-        Fs = self.onWidgetSetup(wx.TextCtrl(self.waferdetails, value=str(
-            1.24e16), name="Fs" + Suffix), self.AnalyseFiles_Box_contence, row2, 2)
-        Ai = self.onWidgetSetup(wx.TextCtrl(self.waferdetails, value=str(
-            1e15), name="Ai" + Suffix), self.AnalyseFiles_Box_contence, row2, 3)
-        Reflection = self.onWidgetSetup(wx.TextCtrl(self.waferdetails, value=str(
-            10), name="Reflection" + Suffix), self.AnalyseFiles_Box_contence, row2, 4)
-        # Wavelength          = self.onWidgetSetup(wx.TextCtrl(self.waferdetails,value=str(808),name = "Wavelength" + Suffix)              ,self.AnalyseFiles_Box_contence   ,row2,5)
-        CropStart = self.onWidgetSetup(wx.TextCtrl(self.waferdetails, value=str(
-            0), name="CropStart" + Suffix), self.AnalyseFiles_Box_contence, row, 6)
-        CropEnd = self.onWidgetSetup(wx.TextCtrl(self.waferdetails, value=str(
-            100), name="CropEnd" + Suffix), self.AnalyseFiles_Box_contence, row2, 6)
-        Binning = self.onWidgetSetup(wx.TextCtrl(self.waferdetails, value=str(
-            100), name="Binning" + Suffix), self.AnalyseFiles_Box_contence, row2, 7)
-
-        # LoadFileText.Size.SetSize(10000,-1)
-        # print "LoadFileButton" + Suffix
+            self.waferdetails, value="Loaded Dummy Name",
+            name="LoadFileText" + Suffix)
+        Fs = self.onWidgetSetup(
+            wx.TextCtrl(self.waferdetails,
+                        value=str(1.24e16),
+                        name="Fs" + Suffix),
+            self.AnalyseFiles_Box_contence, row2, 2)
+        Ai = self.onWidgetSetup(
+            wx.TextCtrl(self.waferdetails,
+                        value=str(1e15),
+                        name="Ai" + Suffix),
+            self.AnalyseFiles_Box_contence, row2, 3)
+        Reflection = self.onWidgetSetup(
+            wx.TextCtrl(self.waferdetails,
+                        value=str(10),
+                        name="Reflection" + Suffix),
+            self.AnalyseFiles_Box_contence, row2, 4)
+        Temp = self.onWidgetSetup(
+            wx.TextCtrl(self.waferdetails,
+                        value=str(300),
+                        name="Temp" + Suffix),
+            self.AnalyseFiles_Box_contence, row2, 5)
+        CropStart = self.onWidgetSetup(
+            wx.TextCtrl(self.waferdetails,
+                        value=str(0),
+                        name="CropStart" + Suffix),
+            self.AnalyseFiles_Box_contence, row, 6)
+        CropEnd = self.onWidgetSetup(
+            wx.TextCtrl(self.waferdetails,
+                        value=str(100),
+                        name="CropEnd" + Suffix),
+            self.AnalyseFiles_Box_contence, row2, 6)
+        Binning = self.onWidgetSetup(
+            wx.TextCtrl(self.waferdetails,
+                        value=str(100),
+                        name="Binning" + Suffix),
+            self.AnalyseFiles_Box_contence, row2, 7)
 
         # Need to make them do something
-        # self.AnalyseFiles_Box_contence.Add(LoadFileButton,                  ( row ,0)     ,flag=wx.ALL|wx.GROW|wx.ALIGN_CENTER,border=3)
         self.AnalyseFiles_Box_contence.Add(
-            LoadFileText,                    (row, 1), (1, 4), flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER, border=10)
+            LoadFileText, (row, 1), (1, 4),
+            flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER,
+            border=10)
 
         "Bindings"
 
-        labels = [Fs, Ai, CropStart, Reflection, CropStart, CropEnd, Binning]
+        labels = [Fs, Ai, CropStart, Reflection,
+                  Temp, CropStart, CropEnd, Binning]
 
         LoadFileButton.Bind(wx.EVT_BUTTON, self.LoadRawDataFile)
 
@@ -471,7 +547,7 @@ class Analyser(wx.Frame, Constants):
 
         # Makeing the name of the Text screen that is being updated
         names = ['LoadFileButton', 'LoadFileText', 'Fs', 'Ai',
-                 'Reflection', 'CropStart', 'CropEnd', 'Binning']
+                 'Reflection', 'Temp', 'CropStart', 'CropEnd', 'Binning']
 
         for name in names:
             ControlName = name + str(num)
@@ -480,15 +556,6 @@ class Analyser(wx.Frame, Constants):
             self.waferdetails.FindWindowByName(ControlName).Destroy()
 
         self.waferdetails.Fit()
-
-        """"""
-        #self.number_of_buttons += 1
-        #label = "Button %s" %  self.number_of_buttons
-        #name = "button%s" % self.number_of_buttons
-        #new_button = wx.Button(self, label=label, name=name)
-        #self.widgetSizer.Add(new_button, 0, wx.ALL, 5)
-        # self.frame.fSizer.Layout()
-        # self.frame.Fit()
 
     def CheckboxBinderChangeProcessed(self, name):
         name.Bind(wx.EVT_CHECKBOX, self.CheckBoxChanged)
@@ -520,10 +587,10 @@ class Analyser(wx.Frame, Constants):
             return handel.iVoc()
 
         elif(String == u"\u0394\u03C3"):
-            return handel.Data['PC'], handel.DeltaN_PL * self.q * Mobility.Sum(handel.n0, handel.p0, handel.DeltaN_PL) * handel.Wafer['Thickness']
+            return handel.Data['PC'], handel.DeltaN_PL * self.q * Mobility().mobility_sum(handel.DeltaN_PL, handel.n0, handel.p0, handel.Wafer['Temp']) * handel.Wafer['Thickness']
 
         elif(String == u"\u03C3"):
-            return handel.Raw_PCEdited + handel.DarkConductance, handel.DeltaN_PL * self.q * Mobility.Sum(handel.n0, handel.p0, handel.DeltaN_PL) * handel.Thickness + handel.DarkConductance
+            return handel.Raw_PCEdited + handel.DarkConductance, handel.DeltaN_PL * self.q * Mobility().mobility_sum(handel.DeltaN_PL, handel.n0, handel.p0, handel.Wafer['Temp']) * handel.Thickness + handel.DarkConductance
 
         elif(String == 'Ideality Factor'):
             return handel.Local_IdealityFactor()
@@ -648,15 +715,15 @@ class Analyser(wx.Frame, Constants):
         self.DataSet = int(e.GetId())
         input_dic = collections.OrderedDict()
         # add what should appear as wild cards, in order
-        input_dic['All Raw data Files']= '*Data.dat;*.tsv'
-        input_dic['Old QSSPL']= '*_Raw Data.dat'
-        input_dic['New QSSPL']= '*.Raw Data.dat'
-        input_dic['Temp Dep']= '*.tsv'
-        
-        #make into format or wild cards
+        input_dic['All Raw data Files'] = '*Data.dat;*.tsv'
+        input_dic['Old QSSPL'] = '*_Raw Data.dat'
+        input_dic['New QSSPL'] = '*.Raw Data.dat'
+        input_dic['Temp Dep'] = '*.tsv'
+
+        # make into format or wild cards
         ext_options = '|'.join(
             [key + "|" + val for key, val in input_dic.items()])
-        
+
         dlg = wx.FileDialog(self, "Choose a file", self.dirname, "",
                             ext_options, wx.OPEN)
 
@@ -703,11 +770,13 @@ class Analyser(wx.Frame, Constants):
         # Grabs the values from the Data Dictionary
         for i in ['Fs', 'Ai']:
             self.waferdetails.FindWindowByName(
-                i + str(self.DataSet)).SetValue('{0:.2e}'.format(self.Files[self.DataSet].Wafer[i]))
+                i + str(self.DataSet)).SetValue(
+                '{0:.2e}'.format(self.Files[self.DataSet].Wafer[i]))
 
-        for i in ['Reflection', 'CropStart', 'CropEnd', 'Binning']:
+        for i in ['Reflection', 'CropStart', 'CropEnd', 'Binning', 'Temp']:
             self.waferdetails.FindWindowByName(
-                i + str(self.DataSet)).SetValue(str(self.Files[self.DataSet].Wafer[i]))
+                i + str(self.DataSet)).SetValue(
+                str(self.Files[self.DataSet].Wafer[i]))
 
     def OnKeyDownChangedProcessed(self, e):
         # print e.GetKeyCode()
@@ -740,31 +809,36 @@ class Analyser(wx.Frame, Constants):
         for j in range(self.Files.shape[0]):
             a = self.Files[j]
             if a.Used:
-                a.CalculateLifetime()
+                a.CalculateLifetime(BackGroundShow=False,
+                                    model_handeller=self.model_handeller.selected_model)
 
     def UpdateInputtedValues(self):
         # This should change later to check if values have changed, and then if
         # they have onlyprocess the files that have changed. Should make for
         # quicker plot refreshing
+        input_boxes = [
+            'Fs', 'Ai', 'Reflection', 'Temp', 'CropStart', 'CropEnd']
 
         for j in range(self.Files.shape[0]):
 
             a = self.Files[j]
-            if (a.Used == True):
+            if a.Used:
 
-                for i in ['Fs', 'Ai', 'Reflection', 'CropStart', 'CropEnd']:
-                # print i
+                for i in input_boxes:
+
                     a.Wafer[i] = float(
-                        self.waferdetails.FindWindowByName(i + str(j)).GetValue())
+                        self.waferdetails.FindWindowByName(
+                            i + str(j)).GetValue())
 
                 for i in ['Binning']:
-                    # print float(self.waferdetails.FindWindowByName(i + str(j)).GetValue()),i
-                    # print a.Wafer[i]
                     a.Wafer[i] = int(
-                        float(self.waferdetails.FindWindowByName(i + str(j)).GetValue()))
+                        float(
+                            self.waferdetails.FindWindowByName(
+                                i + str(j)).GetValue()))
 
-                a.Wafer['Quad'], a.Wafer['Lin'], a.Wafer['Const'] = float(self.InputPCa.GetValue(
-                )), float(self.InputPCb.GetValue()), float(self.InputPCc.GetValue())
+                a.Wafer['Quad'], = float(self.InputPCa.GetValue()),
+                a.Wafer['Lin'] = float(self.InputPCb.GetValue())
+                a.Wafer['Const'] = float(self.InputPCc.GetValue())
 
                 a.Wafer['Thickness'] = float(
                     self.InputWaferThickness.GetValue())
@@ -773,8 +847,6 @@ class Analyser(wx.Frame, Constants):
 
                 a.Analysis = self.AnaylsisType.GetValue()
                 a.Derivitive = self.DifferentialType.GetValue()
-
-                # a.CalculateLifetime()
 
         a = None
 
