@@ -425,8 +425,9 @@ class Analyser(wx.Frame, Constants):
             header += 'iVoc PC (V) \t iVoc PL (V) \tGeneration PC (Suns) \t Generation PL (Suns) \t'
 
         if self.Ouput_LocalIdealityFactor.IsChecked() == True:
-            header += 'iVoc PC (V) \t iVoc PL (V) \tm PC \t m PL \ '
+            header += 'iVoc PC (V) \t iVoc PL (V) \tm PC \t m PL \t'
 
+        # remove and trailing tabs
         header = header.strip('\t')
         # writing the header
         with open(a.Directory + a.RawDataFile[:num] + '.txt', 'wb') as f:
@@ -452,8 +453,6 @@ class Analyser(wx.Frame, Constants):
                 if self.Ouput_LocalIdealityFactor.IsChecked() == True:
                     s = vstack((s.T, array(self.GrabData(b, 'iVoc')), array(
                         self.GrabData(b, 'Ideality Factor')))).T
-            # print
-            # self.Ouput_Lifetime.IsChecked(),self.Ouput_SunsVoc.IsChecked(),self.Ouput_LocalIdealityFactor.IsChecked()
 
             # One got data from a file, write it and leave a space.
 
@@ -587,10 +586,10 @@ class Analyser(wx.Frame, Constants):
             return handel.iVoc()
 
         elif(String == u"\u0394\u03C3"):
-            return handel.Data['PC'], handel.DeltaN_PL * self.q * Mobility().mobility_sum(handel.DeltaN_PL, handel.n0, handel.p0, handel.Wafer['Temp']) * handel.Wafer['Thickness']
+            return handel.Data['PC'], handel.DeltaN_PL * self.q * Mobility().mobility_sum(handel.DeltaN_PL, handel.ne0, handel.nh0, handel.Wafer['Temp']) * handel.Wafer['Thickness']
 
         elif(String == u"\u03C3"):
-            return handel.Raw_PCEdited + handel.DarkConductance, handel.DeltaN_PL * self.q * Mobility().mobility_sum(handel.DeltaN_PL, handel.n0, handel.p0, handel.Wafer['Temp']) * handel.Thickness + handel.DarkConductance
+            return handel.Raw_PCEdited + handel.DarkConductance, handel.DeltaN_PL * self.q * Mobility().mobility_sum(handel.DeltaN_PL, handel.ne0, handel.nh0, handel.Wafer['Temp']) * handel.Thickness + handel.DarkConductance
 
         elif(String == 'Ideality Factor'):
             return handel.Local_IdealityFactor()
@@ -836,7 +835,7 @@ class Analyser(wx.Frame, Constants):
                             self.waferdetails.FindWindowByName(
                                 i + str(j)).GetValue()))
 
-                a.Wafer['Quad'], = float(self.InputPCa.GetValue()),
+                a.Wafer['Quad'] = float(self.InputPCa.GetValue())
                 a.Wafer['Lin'] = float(self.InputPCb.GetValue())
                 a.Wafer['Const'] = float(self.InputPCc.GetValue())
 

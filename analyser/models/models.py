@@ -28,7 +28,9 @@ class models_handeller():
 
     def access(self, model, matterial, author, **kwargs):
 
-        return self.use_models[model](matterial=matterial, author=author).update(kwargs)
+        return self.use_models[model](
+            matterial=matterial, author=author
+        ).update(kwargs)
 
     def _get_available_models(self):
         ni = NI().available_models()

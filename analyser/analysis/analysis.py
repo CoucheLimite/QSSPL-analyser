@@ -16,7 +16,8 @@ from models.NumericalDifferentiation_windows import Finite_Difference, Regularis
 from utils.importexport import LoadData
 import scipy.constants as C
 
-import caculate_quantities
+import caculate_quantities as CQ
+
 
 def find_nearest(array, value):
     idx = (abs(array - value)).argmin()
@@ -39,26 +40,26 @@ class Data(Constants):
 
     def _update_ni(self, model_handeller):
         if self.Temp != self.Wafer['Temp']:
-            self.ni = ni(matterial = 'Si').update_ni(temp=self.Wafer['Temp'],
-                                         author=model_handeller['ni'])
+            self.ni = ni(matterial='Si').update_ni(temp=self.Wafer['Temp'],
+                                                   author=model_handeller['ni'])
             self.Temp = self.Wafer['Temp']
             self.Vt = C.k * self.Temp / C.e
-            print self.ni
-
         pass
 
     def BackgrounConcentration(self):
         if (self.Type == 'p'):
-            self.p0 = self.Wafer['Doping']
-            self.n0 = self.ni**2 / self.Wafer['Doping']
+            self.nh0 = self.Wafer['Doping']
+            self.ne0 = self.ni**2 / self.Wafer['Doping']
             # print 'ptype'
         elif(self.Type == 'n'):
-            self.n0 = self.Wafer['Doping']
-            self.p0 = self.ni**2 / self.Wafer['Doping']
+            self.ne0 = self.Wafer['Doping']
+            self.nh0 = self.ni**2 / self.Wafer['Doping']
             # print 'ntype'
         else:
-            self.n0 = 1e20
-            self.p0 = 1e20
+            self.ne0 = 1e20
+            self.nh0 = 1e20
+
+        pass
 
     def ProvideRawDataFile(self, Directory, RawDataFile):
         self.Directory = Directory + '/'
@@ -108,12 +109,14 @@ class Data(Constants):
             self.Wafer['CropStart'], self.Wafer['CropEnd'] = 5, 95
 
     def iVoc(self):
-        return self.Vt * log((self.n0 + self.DeltaN_PC) * (self.p0 + self.DeltaN_PC) / self.ni / self.ni), self.Vt * log((self.DeltaN_PL + self.n0) * (self.DeltaN_PL + self.p0) / self.ni / self.ni)
+        PC_ivoc = CQ.iVoc_from_carriers(self.ne0,self.nh0,self.DeltaN_PC, self.Wafer['Temp'], self.ni)
+        PL_ivoc = CQ.iVoc_from_carriers(self.ne0,self.nh0,self.DeltaN_PL, self.Wafer['Temp'], self.ni)
+        return PC_ivoc, PL_ivoc
 
     def CalculateLifetime(self, BackGroundShow=False, model_handeller=None):
 
         # make sure the ni is updated
-        self._update_ni()
+        self._update_ni(model_handeller)
 
         # determine the background concentration of carriers
         self.BackgrounConcentration()
@@ -125,9 +128,9 @@ class Data(Constants):
         for i in ['PL', 'Gen']:
             self.Data[i] -= average(self.Data[i][BackgroundIndex:])
 
-        self.Data['PC'] = self.Quad * \
+        self.Data['PC'] = self.Wafer['Quad'] * \
             (self.Data['PC']) * (self.Data['PC']) + \
-            self.Lin * (self.Data['PC']) + self.Const
+            self.Wafer['Lin'] * (self.Data['PC']) + self.Wafer['Const']
 
         '''for now just use the 95% limit to cal background'''
         """background subtraction"""
@@ -151,69 +154,32 @@ class Data(Constants):
 
         self.Data = self.Binning_Named(self.Data, self.Wafer['Binning'])
 
-        self.DeltaN_PC = ones(self.Data['Time'].shape[0]) * 1e10
-        self.DeltaN_PL = ones(self.Data['Time'].shape[0]) * 1e10
-
-        Na, Nd = self.n0, self.p0
-        while (i > 0.01):
-
-            # TO DO
-            # the below line takes is provide n0 and p0 and not the doping of
-            # each. This needs to be fixed.
-            # assumption: mobility only matters on the ionised dopants
-
-            # iNa = Ion('Si').update_dopant_ionisation(Na, self.DeltaN_PC, 'phosphorous',
-            #                      temp=self.Wafer['Temp'], author=None)
-            # iNd = Ion('Si').update_dopant_ionisation(Nd, self.DeltaN_PC, 'boron',
-            #                      temp=self.Wafer['Temp'], author=None)
-
-            # current just on the number of dopants
-            iNa = Na
-            iNd = Nd
-
-            temp = self.Data['PC'] / C.e \
-                / Mobility('Si',
-                           author=model_handeller['mobility']).mobility_sum(
-                min_car_den=self.DeltaN_PC,
-                Na=iNa, Nd=iNd,
-                temp=self.Wafer['Temp'])\
-                / self.Wafer['Thickness']
-
-            i = average(abs(temp - self.DeltaN_PC) / self.DeltaN_PC)
-
-            self.DeltaN_PC = temp
+        self.DeltaN_PC = CQ.min_car_den_from_photoconductance(
+            self.Data['PC'],
+            self.Wafer['Thickness'],
+            self.Wafer['Temp'],
+            self.ne0,
+            self.nh0,
+            model_handeller['mobility'])
 
         if self.Wafer['Type'] == 'n':
             dopant = 'phosphorous'
         elif self.Wafer['Type'] == 'p':
             dopant = 'boron'
-        i = 1e3
-        while (i > 0.01):
 
-            idop = Ion('Si',
-                       author=model_handeller['ionisation']
-                       ).update_dopant_ionisation(
-                self.Wafer['Doping'], self.DeltaN_PL, dopant,
-                temp=self.Wafer['Temp'], author=None)
-
-            maj_car_den = idop + self.DeltaN_PL
-
-            # TODO
-            B = Radiative('Si',
-                          author=model_handeller['B']).B(
-                self.DeltaN_PL, idop, temp=self.Wafer['Temp'])
-
-            temp = (-maj_car_den + sqrt(abs((maj_car_den)**2 + 4 * self.Data[
-                'PL'] * self.Wafer['Ai'] / B))) / 2
-
-            i = average(abs(temp - self.DeltaN_PL) / self.DeltaN_PL)
-            self.DeltaN_PL = temp
+        self.DeltaN_PL= CQ.min_car_den_from_photoluminescence(
+            self.Data['PL'],
+            self.Wafer['Ai'],
+            dopant,
+            max(self.ne0, self.nh0),
+            self.Wafer['Temp'],
+            model_handeller['B'],
+            model_handeller['ionisation'] )
 
         self.Tau_PC = self.DeltaN_PC / self.Generation('PC')
         self.Tau_PL = self.DeltaN_PL / self.Generation('PL')
 
-        print self.Tau_PC
-        print self.Tau_PL
+
 
     def Generation(self, PCorPL, suns=False):
         try:
