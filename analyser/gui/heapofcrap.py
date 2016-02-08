@@ -131,6 +131,8 @@ class Analyser(wx.Frame, Constants):
                 if model.IsChecked():
                     self.model_handeller.selected_model[
                         model_type.GetText()] = model.GetText()
+
+        self.model_handeller._update_update()
         pass
 
     def InitUI(self):
@@ -759,12 +761,21 @@ class Analyser(wx.Frame, Constants):
     ##
     def Inital_Get_Inf_Info(self):
 
-        # only updates doping and thickness when the first file is loaded.
+        # updates:
+        # doping, thickness, coil constants 
+        # from the 1 st file.
         if self.DataSet == 0:
             self.InputWaferDoping.SetValue(
                 str(self.Files[self.DataSet].Wafer['Doping']))
             self.InputWaferThickness.SetValue(
                 str(self.Files[self.DataSet].Wafer['Thickness']))
+            # set the PC coil constants
+            self.InputPCa.SetValue(
+                str(self.Files[self.DataSet].Wafer['Quad']))
+            self.InputPCb.SetValue(
+                str(self.Files[self.DataSet].Wafer['Lin']))
+            self.InputPCc.SetValue(
+                str(self.Files[self.DataSet].Wafer['Const']))
 
         # Grabs the values from the Data Dictionary
         for i in ['Fs', 'Ai']:
@@ -809,7 +820,7 @@ class Analyser(wx.Frame, Constants):
             a = self.Files[j]
             if a.Used:
                 a.CalculateLifetime(BackGroundShow=False,
-                                    model_handeller=self.model_handeller.selected_model)
+                                    model_handeller=self.model_handeller)
 
     def UpdateInputtedValues(self):
         # This should change later to check if values have changed, and then if

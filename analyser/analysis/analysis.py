@@ -5,12 +5,6 @@ import matplotlib.pylab as plt
 
 from models.ConstantsClass import *
 
-
-from semiconductor.electrical.mobility import Mobility
-from semiconductor.electrical.ionisation import Ionisation as Ion
-from semiconductor.matterial.ni import IntrinsicCarrierDensity as ni
-from semiconductor.recombination.Intrinsic import Radiative
-
 from models.NumericalDifferentiation_windows import Finite_Difference, Regularisation
 
 from utils.importexport import LoadData
@@ -40,8 +34,7 @@ class Data(Constants):
 
     def _update_ni(self, model_handeller):
         if self.Temp != self.Wafer['Temp']:
-            self.ni = ni(matterial='Si').update_ni(temp=self.Wafer['Temp'],
-                                                   author=model_handeller['ni'])
+            self.ni = model_handeller.update['ni'](temp=self.Wafer['Temp'])
             self.Temp = self.Wafer['Temp']
             self.Vt = C.k * self.Temp / C.e
         pass
@@ -50,11 +43,10 @@ class Data(Constants):
         if (self.Type == 'p'):
             self.nh0 = self.Wafer['Doping']
             self.ne0 = self.ni**2 / self.Wafer['Doping']
-            # print 'ptype'
+
         elif(self.Type == 'n'):
             self.ne0 = self.Wafer['Doping']
             self.nh0 = self.ni**2 / self.Wafer['Doping']
-            # print 'ntype'
         else:
             self.ne0 = 1e20
             self.nh0 = 1e20
@@ -153,14 +145,15 @@ class Data(Constants):
             plt.show()
 
         self.Data = self.Binning_Named(self.Data, self.Wafer['Binning'])
-
+        
+        model_handeller._update_update()
         self.DeltaN_PC = CQ.min_car_den_from_photoconductance(
             self.Data['PC'],
             self.Wafer['Thickness'],
             self.Wafer['Temp'],
             self.ne0,
             self.nh0,
-            model_handeller['mobility'])
+            model_handeller.update['mobility'])
 
         if self.Wafer['Type'] == 'n':
             dopant = 'phosphorous'
@@ -173,8 +166,7 @@ class Data(Constants):
             dopant,
             max(self.ne0, self.nh0),
             self.Wafer['Temp'],
-            model_handeller['B'],
-            model_handeller['ionisation'] )
+            model_handeller)
 
         self.Tau_PC = self.DeltaN_PC / self.Generation('PC')
         self.Tau_PL = self.DeltaN_PL / self.Generation('PL')

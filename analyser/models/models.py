@@ -12,6 +12,7 @@ class models_handeller():
     '''
 
     available_models = {}
+    matterial = 'Si'
 
     def __init__(self):
         self._get_available_models()
@@ -20,11 +21,7 @@ class models_handeller():
                                'ionisation': 'Altermatt2006_table1',
                                'B': 'Altermatt2005'
                                }
-        self.use_models = {'ni': NI,
-                           'mobility': Mobility,
-                           'ionisation': Ion,
-                           'B': Radiative
-                           }
+        self._update_update()
 
     def access(self, model, matterial, author, **kwargs):
 
@@ -43,6 +40,31 @@ class models_handeller():
         self.available_models = values
         return self.available_models
 
+    def _update_update(self):
+        '''
+        creates a dictionary that holds
+        the required semiconudctor models for easy
+        calling
+        '''
+
+        self.update = {
+            'ni': NI(
+                matterial=self.matterial,
+                author=self.selected_model['ni']
+                ).update_ni,
+            'mobility': Mobility(
+                matterial=self.matterial,
+                author=self.selected_model['mobility']
+                ).mobility_sum,
+            'ionisation': Ion(
+                matterial=self.matterial,
+                author=self.selected_model['ionisation']
+                ).update_dopant_ionisation,
+            'B': Radiative(
+                matterial=self.matterial,
+                author=self.selected_model['B']
+                ).B
+        }
     def _auto_select_models(self):
         values = self._get_available_models()
 
