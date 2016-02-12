@@ -105,9 +105,11 @@ class Analyser(wx.Frame, Constants):
                             model,
                             ' a model',
                             wx.ITEM_RADIO)
-                if self.model_handeller.selected_model == model:
-                    temp.check()
-
+                if self.model_handeller.selected_model[model_type]  == model:
+                    val = temp.GetMenuItemCount()
+                    if not temp.GetMenuItems()[val-1].IsChecked():
+                        temp.GetMenuItems()[val-1].Check()
+                        
             self.models_menu.AppendMenu(wx.ID_ANY, model_type, temp)
 
         # need to bind them to change the models with appropriate

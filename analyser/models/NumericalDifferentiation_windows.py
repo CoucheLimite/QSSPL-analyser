@@ -118,6 +118,5 @@ ax.plot(X,Finite_Difference().TwoPointCentral(X,Y),'r-.',label='Two Point Finite
 
 show()
 '''
-print 5
 
 

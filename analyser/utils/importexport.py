@@ -143,6 +143,8 @@ class Load_QSSPL_File_Python():
         Ai = 1
         Quad = 0.0004338
         Lin = 0.03611
+        Const = 0.001440789
+        Temp = 300
 
         CropStart = 0
         CropEnd = 100
