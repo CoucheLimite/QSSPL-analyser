@@ -105,8 +105,13 @@ class Analyser(wx.Frame, Constants):
                             model,
                             ' a model',
                             wx.ITEM_RADIO)
-                if self.model_handeller.selected_model == model:
-                    temp.check()
+
+                if self.model_handeller.selected_model[model_type]  == model:
+                    val = temp.GetMenuItemCount()
+                    if not temp.GetMenuItems()[val-1].IsChecked():
+                        temp.GetMenuItems()[val-1].Check()
+                    
+                    
 
             self.models_menu.AppendMenu(wx.ID_ANY, model_type, temp)
 
@@ -241,7 +246,7 @@ class Analyser(wx.Frame, Constants):
         self.y_axis_label = self.onWidgetSetup(wx.StaticText(
             self.waferdetails, label="y-axis"), Plotting_Choice_Box_contence, 0, 0)
         self.y_axis = self.onWidgetSetup(wx.ComboBox(self.waferdetails, value=tau_string, choices=[
-                                         u"\u0394n", tau_string, 'Generation', 'Generation (Suns)', 'Time', 'iVoc', u"\u0394\u03C3", u"\u03C3", 'Ideality Factor'], style=wx.CB_READONLY), Plotting_Choice_Box_contence, 1, 0)
+                                         u"\u0394n", tau_string, 'Generation', 'Generation (Suns)', 'Time', 'iVoc', u"\u0394\u03C3", u"\u03C3", 'Ideality Factor','Voltage sent from DAQ'], style=wx.CB_READONLY), Plotting_Choice_Box_contence, 1, 0)
         self.x_axis_label = self.onWidgetSetup(wx.StaticText(
             self.waferdetails, label="x-axis"), Plotting_Choice_Box_contence, 0, 1)
         self.x_axis = self.onWidgetSetup(wx.ComboBox(self.waferdetails, value=deltan_string, choices=[
@@ -608,6 +613,9 @@ class Analyser(wx.Frame, Constants):
         elif(String == 'The Number 1'):
             return 1, 1
 
+        elif(String == 'Voltage sent from DAQ'):
+            return handel.Data['Gen_sent_voltage'], handel.Data['Gen_sent_voltage']
+
         else:
             print 'negitivie', String
 
@@ -762,7 +770,7 @@ class Analyser(wx.Frame, Constants):
     def Inital_Get_Inf_Info(self):
 
         # updates:
-        # doping, thickness, coil constants 
+        # doping, thickness, coil constants
         # from the 1 st file.
         if self.DataSet == 0:
             self.InputWaferDoping.SetValue(

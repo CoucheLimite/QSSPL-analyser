@@ -14,6 +14,7 @@ def min_car_den_from_photoconductance(conductance,
     Calculates the excess carrier density per cm^-3 from a photoconductance
     '''
     #
+
     min_car_den = np.ones(conductance.shape[0]) * 1e10
     Na, Nd = ne0, nh0
 
@@ -71,6 +72,7 @@ def min_car_den_from_photoluminescence(photoluminescence,
         maj_car_den = idop + min_car_den
 
         # TODO
+
         B = model_handeller.update['B'](
             min_car_den, idop, temp=wafer_temp)
 

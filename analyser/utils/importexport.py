@@ -108,19 +108,20 @@ class Load_QSSPL_File_Python():
 
     def Load_RawData_File(self):
         data = np.genfromtxt(
-            self.Directory + self.RawDataFile, unpack=True, names=True, delimiter='\t')
+            self.Directory + self.RawDataFile,
+            unpack=True,
+            names=True,
+            delimiter='\t')
+        print data.dtype.names
         s = np.array([])
         dic = {'Time_s': 'Time', 'Generation_V': 'Gen',
-               'PL_V': 'PL', 'PC_V': 'PC'}
-        # print np.array(data.dtype.names)
+               'PL_V': 'PL', 'PC_V': 'PC', 'Waveform_V': 'Gen_sent_voltage'}
         for i in np.array(data.dtype.names):
-            # print i,dic[i]
+
             s = np.append(s, dic[i])
 
-        # print s
-
         data.dtype.names = s
-        # ('Time','Gen','PL','PC')
+
         return data
 
     def num(self, s):
@@ -143,6 +144,8 @@ class Load_QSSPL_File_Python():
         Ai = 1
         Quad = 0.0004338
         Lin = 0.03611
+        Const = 0.001440789
+        Temp = 300
 
         CropStart = 0
         CropEnd = 100
@@ -158,7 +161,7 @@ class Load_QSSPL_File_Python():
         for i in s.split('\n')[2:-1]:
             # print i.split(':\t')[1]
             List[i.split(':\t')[0].strip()] = self.num(i.split(':\t')[1])
-        print List
+        # print List
 
         return List
 
