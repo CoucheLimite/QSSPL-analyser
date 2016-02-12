@@ -105,11 +105,11 @@ class Analyser(wx.Frame, Constants):
                             model,
                             ' a model',
                             wx.ITEM_RADIO)
-                if self.model_handeller.selected_model[model_type]  == model:
+                if self.model_handeller.selected_model[model_type] == model:
                     val = temp.GetMenuItemCount()
-                    if not temp.GetMenuItems()[val-1].IsChecked():
-                        temp.GetMenuItems()[val-1].Check()
-                        
+                    if not temp.GetMenuItems()[val - 1].IsChecked():
+                        temp.GetMenuItems()[val - 1].Check()
+
             self.models_menu.AppendMenu(wx.ID_ANY, model_type, temp)
 
         # need to bind them to change the models with appropriate
@@ -194,12 +194,21 @@ class Analyser(wx.Frame, Constants):
             self.waferdetails, label="Linear"), SintonCalibration_Box_contence, 0, 2)
         self.TextPCc = self.onWidgetSetup(wx.StaticText(
             self.waferdetails, label="Offset"), SintonCalibration_Box_contence, 0, 3)
-        self.InputPCa = self.onWidgetSetup(wx.TextCtrl(
-            self.waferdetails, value=str(self.Quad)), SintonCalibration_Box_contence, 1, 1)
-        self.InputPCb = self.onWidgetSetup(wx.TextCtrl(
-            self.waferdetails, value=str(self.Lin)), SintonCalibration_Box_contence, 1, 2)
-        self.InputPCc = self.onWidgetSetup(wx.TextCtrl(
-            self.waferdetails, value=str(self.Const)), SintonCalibration_Box_contence, 1, 3)
+        self.InputPCa = self.onWidgetSetup(
+            wx.TextCtrl(self.waferdetails,
+                        value=str(self.Quad),
+                        style=wx.TE_PROCESS_ENTER),
+            SintonCalibration_Box_contence, 1, 1)
+        self.InputPCb = self.onWidgetSetup(
+            wx.TextCtrl(self.waferdetails,
+                        value=str(self.Lin),
+                        style=wx.TE_PROCESS_ENTER),
+            SintonCalibration_Box_contence, 1, 2)
+        self.InputPCc = self.onWidgetSetup(
+            wx.TextCtrl(self.waferdetails,
+                        value=str(self.Const),
+                        style=wx.TE_PROCESS_ENTER),
+            SintonCalibration_Box_contence, 1, 3)
 
         # Arranging items
         self.sizar.Add(SintonCalibration_box, (0, 0), (2, 2),
@@ -271,11 +280,20 @@ class Analyser(wx.Frame, Constants):
             self.waferdetails, label="Doping (p or n)"), GlobalWafer_Box_contence, 0, 3)
 
         self.InputWaferDoping = self.onWidgetSetup(
-            wx.TextCtrl(self.waferdetails, value=str(8e15)), GlobalWafer_Box_contence, 1, 1)
+            wx.TextCtrl(self.waferdetails,
+                        value=str(8e15),
+                        style=wx.TE_PROCESS_ENTER),
+            GlobalWafer_Box_contence, 1, 1)
         self.InputWaferThickness = self.onWidgetSetup(
-            wx.TextCtrl(self.waferdetails, value=str(0.0180)), GlobalWafer_Box_contence, 1, 2)
+            wx.TextCtrl(self.waferdetails,
+                        value=str(0.0180),
+                        style=wx.TE_PROCESS_ENTER),
+            GlobalWafer_Box_contence, 1, 2)
         self.InputDopingType = self.onWidgetSetup(
-            wx.TextCtrl(self.waferdetails, value='p'), GlobalWafer_Box_contence, 1, 3)
+            wx.TextCtrl(self.waferdetails,
+                        value='p',
+                        style=wx.TE_PROCESS_ENTER),
+            GlobalWafer_Box_contence, 1, 3)
 
         # Placing Wafer Coefficients box
         self.GloablWafer_sizer = wx.StaticBoxSizer(
@@ -392,7 +410,7 @@ class Analyser(wx.Frame, Constants):
         # labels= self.InputWaferThickness,self.InputWaferDoping,self.InputDopingType
 
         for label in labels:
-            label.Bind(wx.EVT_KEY_DOWN, self.OnKeyDownChangedProcessed)
+            label.Bind(wx.EVT_TEXT_ENTER, self.updt_frm_prcdat)
 
         # Checkboxes as applies to figures has to be done after figures are
         # real
@@ -404,7 +422,7 @@ class Analyser(wx.Frame, Constants):
         # labels= [self.InputPercentageStart0, self.InputPercentageEnd0, self.InputBinning0,self.InputPercentageStart1, self.InputPercentageEnd1, self.InputBinning1, self.InputPercentageStart2,self.InputPercentageEnd2,self.InputBinning2]
 
         # for label in labels:
-            # label.Bind(wx.EVT_KEY_DOWN, self.OnKeyDownChangedRaw)
+            # label.Bind(wx.EVT_KEY_DOWN, self.updt_frm_rawdat)
 
         """Binder for fitting buttons"""
         # self.CalcEQEButton.Bind(wx.EVT_BUTTON, self.CalcEQE)
@@ -491,37 +509,44 @@ class Analyser(wx.Frame, Constants):
         Fs = self.onWidgetSetup(
             wx.TextCtrl(self.waferdetails,
                         value=str(1.24e16),
-                        name="Fs" + Suffix),
+                        name="Fs" + Suffix,
+                        style=wx.TE_PROCESS_ENTER),
             self.AnalyseFiles_Box_contence, row2, 2)
         Ai = self.onWidgetSetup(
             wx.TextCtrl(self.waferdetails,
                         value=str(1e15),
-                        name="Ai" + Suffix),
+                        name="Ai" + Suffix,
+                        style=wx.TE_PROCESS_ENTER),
             self.AnalyseFiles_Box_contence, row2, 3)
         Reflection = self.onWidgetSetup(
             wx.TextCtrl(self.waferdetails,
                         value=str(10),
-                        name="Reflection" + Suffix),
+                        name="Reflection" + Suffix,
+                        style=wx.TE_PROCESS_ENTER),
             self.AnalyseFiles_Box_contence, row2, 4)
         Temp = self.onWidgetSetup(
             wx.TextCtrl(self.waferdetails,
                         value=str(300),
-                        name="Temp" + Suffix),
+                        name="Temp" + Suffix,
+                        style=wx.TE_PROCESS_ENTER),
             self.AnalyseFiles_Box_contence, row2, 5)
         CropStart = self.onWidgetSetup(
             wx.TextCtrl(self.waferdetails,
                         value=str(0),
-                        name="CropStart" + Suffix),
+                        name="CropStart" + Suffix,
+                        style=wx.TE_PROCESS_ENTER),
             self.AnalyseFiles_Box_contence, row, 6)
         CropEnd = self.onWidgetSetup(
             wx.TextCtrl(self.waferdetails,
                         value=str(100),
-                        name="CropEnd" + Suffix),
+                        name="CropEnd" + Suffix,
+                        style=wx.TE_PROCESS_ENTER),
             self.AnalyseFiles_Box_contence, row2, 6)
         Binning = self.onWidgetSetup(
             wx.TextCtrl(self.waferdetails,
                         value=str(100),
-                        name="Binning" + Suffix),
+                        name="Binning" + Suffix,
+                        style=wx.TE_PROCESS_ENTER),
             self.AnalyseFiles_Box_contence, row2, 7)
 
         # Need to make them do something
@@ -538,7 +563,8 @@ class Analyser(wx.Frame, Constants):
         LoadFileButton.Bind(wx.EVT_BUTTON, self.LoadRawDataFile)
 
         for label in labels:
-            label.Bind(wx.EVT_CHAR_HOOK, self.OnKeyDownChangedRaw)
+            label.Bind(wx.EVT_TEXT_ENTER,
+                       self.updt_frm_rawdat)
 
         self.waferdetails.Fit()
 
@@ -748,7 +774,7 @@ class Analyser(wx.Frame, Constants):
             # Makein the cropping based on the Wavefunction
             self.Files[self.DataSet].ChoosingDefultCropValues()
             # placing the data that has been pulled from the files.
-            self.Inital_Get_Inf_Info()
+            self.load_inf_data()
 
             dlg.Destroy()
 
@@ -761,10 +787,10 @@ class Analyser(wx.Frame, Constants):
     ##
     # Should return Ai,Btlow,fs, Doping, Thickness,"""Reflection"""
     ##
-    def Inital_Get_Inf_Info(self):
+    def load_inf_data(self):
 
         # updates:
-        # doping, thickness, coil constants 
+        # doping, thickness, coil constants
         # from the 1 st file.
         if self.DataSet == 0:
             self.InputWaferDoping.SetValue(
@@ -790,30 +816,35 @@ class Analyser(wx.Frame, Constants):
                 i + str(self.DataSet)).SetValue(
                 str(self.Files[self.DataSet].Wafer[i]))
 
-    def OnKeyDownChangedProcessed(self, e):
-        # print e.GetKeyCode()
-        if (e.GetKeyCode() == 13):
-            # This is for indicating which colum of data to use.
-            if (e.GetId() > 0):
-                self.DataSet = e.GetId() % 10
+    def updt_frm_prcdat(self, e):
+        '''
+        A function that updates info from
+        the processed data. i.e it doesn't reload the
+        raw data
+        '''
 
-            self.UpdateInputtedValues()
-            self.CalLifetieme()
-            self.DrawProcessedData()
+
+        if (e.GetId() > 0):
+            self.DataSet = e.GetId() % 10
+
+        self.UpdateInputtedValues()
+        self.CalLifetieme()
+        self.DrawProcessedData()
 
         e.Skip()
 
-    def OnKeyDownChangedRaw(self, e):
-        # print e.GetKeyCode()
-        # print e.GetKeyCode()
-        # print 'This is pressed when'
-        if (e.GetKeyCode() == 13):
-            # This is for indicating which colum of data to use.
-            if (e.GetId() > 0):
-                self.DataSet = e.GetId() % 10
-            self.UpdateInputtedValues()
-            self.CalLifetieme()
-            self.DrawProcessedData()
+    def updt_frm_rawdat(self, e):
+        '''
+        A function that updates the data
+        from the raw data
+        '''
+
+        # not sure what this if is for
+        if (e.GetId() > 0):
+            self.DataSet = e.GetId() % 10
+        self.UpdateInputtedValues()
+        self.CalLifetieme()
+        self.DrawProcessedData()
         e.Skip()
 
     def CalLifetieme(self):
