@@ -36,9 +36,9 @@ import os
 from numpy import *
 
 import collections
-from string import find
+# from string import find
 from models.ConstantsClass import *
-from CanvasClass import *
+from gui.CanvasClass import *
 
 
 from models.MobilityV2 import Mobility_Klassen as Mobility
@@ -435,7 +435,7 @@ class Analyser(wx.Frame, Constants):
 
         # setting the file name
         a = self.Files[0]
-        num = find(a.RawDataFile[:-13], '_')
+        num = a.RawDataFile[:-13].find( '_')
 
         # Making the header
         header = 'Time (s)\t'
@@ -478,7 +478,6 @@ class Analyser(wx.Frame, Constants):
 
             # One got data from a file, write it and leave a space.
 
-            # print s.shape,a.OutputData().shape
             # do no need to close file as with a with block
             with open(a.Directory + a.RawDataFile[:num] + '.txt', 'a') as f:
                 f.write('\n')
@@ -488,11 +487,11 @@ class Analyser(wx.Frame, Constants):
         # Need to add one more reference to the Files array
 
         self.Files = append(self.Files, array([Data()]))
-        # print self.Files
+
 
         Suffix = str(self.Files.shape[0] - 1)
         Id = float(str(self.Files.shape[0] - 1))
-        # print Suffix
+
 
         offset = 0
         row = (offset + self.Files.shape[0]) * 2
@@ -637,7 +636,7 @@ class Analyser(wx.Frame, Constants):
             return 1, 1
 
         else:
-            print 'negitivie', String
+            print ('negitivie', String)
 
             return ones(handel.Tau_PC.shape[0]), ones(handel.Tau_PC.shape[0])
 
@@ -708,12 +707,10 @@ class Analyser(wx.Frame, Constants):
                 Filler_croped = a.Data['Time'] / a.RawData['Time'][-1]
 
                 if a.RawData['PC'].shape[0] > 1000:
-                        # print int(1000/a.RawData['PC'].shape[0]),
                     num_raw = int(a.RawData['PC'].shape[0] / 1000)
                 else:
                     num_raw = 1
                 if a.Data['PC'].shape[0] > 1000:
-                    # print int(1000/a.RawData['PC'].shape[0]),
                     num_proc = int(a.RawData['PC'].shape[0] / 1000)
                 else:
                     num_proc = 1

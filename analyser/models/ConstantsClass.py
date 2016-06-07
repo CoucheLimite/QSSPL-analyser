@@ -46,7 +46,6 @@ class Constants():
 
         for i in data.dtype.names:
             for j in range(data.shape[0] // BinAmount):
-        # print mean(data[i*BinAmount:(i+1)*BinAmount,:],axis=0),data2[i,:]
 
                 data2[i][j] = mean(
                     data[i][j * BinAmount:(j + 1) * BinAmount], axis=0)
@@ -63,8 +62,8 @@ class Constants():
             'ExcitationWavelength.dat', usecols=(0, 4))
 
         if (all(diff(WavelengthToAlpha[:, 0]) > 0) == False):
-            print 'Error in Alpha File, x col must be increasing'
-            print WavelengthToAlpha[:, 0]
+            print ('Error in Alpha File, x col must be increasing')
+            print (WavelengthToAlpha[:, 0])
 
         self.alpha = interp(
             self.Wavelength * 1e7, WavelengthToAlpha[:, 0], WavelengthToAlpha[:, 1])
@@ -90,4 +89,3 @@ class Constants():
     def creation_date(self, filename):
         t = path.getctime(filename)
         return datetime.datetime.fromtimestamp(t)
-

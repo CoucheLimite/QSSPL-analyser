@@ -75,7 +75,7 @@ class Data(Constants):
                 self.Data['Time'], Deltan)
 
         else:
-            print 'You fucked up.... again'
+            print ('You fucked up.... again')
 
         return dn_dt
 
@@ -145,7 +145,7 @@ class Data(Constants):
             plt.show()
 
         self.Data = self.Binning_Named(self.Data, self.Wafer['Binning'])
-        
+
         model_handeller._update_update()
         self.DeltaN_PC = CQ.min_car_den_from_photoconductance(
             self.Data['PC'],
@@ -178,7 +178,7 @@ class Data(Constants):
             Gen = getattr(
                 self, 'Generation_' + self.Analysis.replace(' ', '_'))
         except:
-            print 'Choice of generation doesn\'t exist: You fucked up'
+            print ('Choice of generation doesn\'t exist: You fucked up')
 
         if suns == True:
             scale = self.Wafer['Thickness'] / 2.5e17
@@ -198,7 +198,7 @@ class Data(Constants):
         elif PCorPL == 'PL':
             return self.Data['Gen'] * self.Wafer['Fs'] * Trans / self.Wafer['Thickness'] - self.dndt(self.DeltaN_PL)
         else:
-            print 'You fucked up the Generation'
+            print ('You fucked up the Generation')
 
     def Generation_Transient(self, PCorPL):
         if PCorPL == 'PC':
@@ -206,15 +206,12 @@ class Data(Constants):
         elif PCorPL == 'PL':
             return -self.dndt(self.DeltaN_PL)
         else:
-            print 'You fucked up the Generation'
+            print ('You fucked up the Generation')
 
     def Local_IdealityFactor(self):
         # Generation scale doesn't matter so Generation is used
-        # print 'in'
         iVocPC, iVocPL = self.iVoc()
 
-        # print iVocPC
-        # print (self.SS_Generation-self.dndt(self.DeltaN_PC)),Regularisation().FirstDerivative(iVocPC,self.SS_Generation-self.dndt(self.DeltaN_PC),1e-20),Finite_Difference().FourPointCentral(iVocPC,self.SS_Generation-self.dndt(self.DeltaN_PC)),(self.SS_Generation-self.dndt(self.DeltaN_PC))
         if (self.Derivitive == 'Regularised'):
             return  (self.Generation('PC')) / (self.Vt * Regularisation().FirstDerivative       (self.Data['Time'], self.Generation('PC'), 1e-20) / Regularisation().FirstDerivative  (self.Data['Time'], iVocPC, 1e-20)),\
                     (self.Generation('PL')) / (self.Vt * Regularisation().FirstDerivative(self.Data['Time'], self.Generation(
@@ -230,9 +227,6 @@ class Data(Constants):
         # used
         maxindex = argmax(self.SS_Generation)
 
-        # print self.DeltaN_PL.shape
-        # print 'Cropping Negitives'
-
         IndexOfNegitives = where(self.SS_Generation < 0)[0]
 
         firstnegtive = where(IndexOfNegitives < maxindex)[0][-1]
@@ -240,10 +234,9 @@ class Data(Constants):
         self.index = arange(
             IndexOfNegitives[firstnegtive], IndexOfNegitives[lastnegtive], 1)
         # plot(self.Time,self.DeltaN_PL)
-        # print self.Time[IndexOfNegitives[firstnegtive]],self.Time[maxindex],self.Time[IndexOfNegitives[lastnegtive]]
         # show()
 
-        # print
+
         # IndexOfNegitives,maxindex,self.DeltaN_PL[IndexOfNegitives[firstnegtive]]
 
         #self.DeltaN_PL = self.DeltaN_PL [ self.index]
@@ -256,7 +249,6 @@ class Data(Constants):
 
     def Cropping_Percentage(self):
         # this just uses that when points are negitive they should no longer be used
-        # print 'Cropping Percentage'
         maxindex = self.Data.shape[-1]
 
         self.index = arange(int(self.Wafer[

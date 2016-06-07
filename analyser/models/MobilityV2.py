@@ -7,17 +7,17 @@ class Mobility_Klassen():
 
     """
 
-    The temp dependent mobility model of Klaassen. 
+    The temp dependent mobility model of Klaassen.
 
     It currently assumes a constant ni = 9.66e9.
     This value is only used to determine the dark number minority carriers and so is currently ignored.
 
 
-    Thaken from: 
+    Thaken from:
 
-    [1] D. B. M. Klaassen, 
+    [1] D. B. M. Klaassen,
     "A unified mobility model for device simulation-I. Model equations and concentration dependence"
-     Solid. State. Electron., vol. 35, no. 7, pp. 953-959, Jul. 1992. 
+     Solid. State. Electron., vol. 35, no. 7, pp. 953-959, Jul. 1992.
 
     [2] D. B. M. Klaassen,
     "A unified mobility model for device simulation-II. Temperature dependence of carrier mobility and lifetime,"
@@ -25,12 +25,12 @@ class Mobility_Klassen():
 
     additional comments taken from https://www.pvlighthouse.com.au/calculators/Mobility%20calculator/Mobility%20calculator.aspx
 
-    This is the Klaassen's mobility model, for which the calculations  with two exceptions: 
-        (i) r5 is set to -0.8552 rather than -0.01552 (see Table 2 of [1]), 
-        (ii) Eq. A3 of [1] is adjusted such that PCWe is determined with Ne,sc rather than (Z^3 Ni) 
+    This is the Klaassen's mobility model, for which the calculations  with two exceptions:
+        (i) r5 is set to -0.8552 rather than -0.01552 (see Table 2 of [1]),
+        (ii) Eq. A3 of [1] is adjusted such that PCWe is determined with Ne,sc rather than (Z^3 Ni)
          and PCWh is determined with Nh,sc rather than (Z^3 Ni);
 
-    these changes give a better fit to the solid calculated lines in Figures 6 and 7 of [1], which better fits the experimental data. 
+    these changes give a better fit to the solid calculated lines in Figures 6 and 7 of [1], which better fits the experimental data.
     These modifications are also contained in Sentaurus's version of Klaassen's model .
     Klaassen's mobility model fits reasonably with experimental data over an estimated temperature range of 100 - 450 K.
     Its accuracy is greatest at 300 K (see [1,2]).
@@ -87,8 +87,8 @@ class Mobility_Klassen():
             n0 = -net_dark_carriers
             net_dark_carriers = self.ni**2 / net_dark_carriers
         else:
-            print 'how can the dopants change from n-type to p-type?'
-            print "net dark carriers:", net_dark_carriers
+            print ('how can the dopants change from n-type to p-type?')
+            print ("net dark carriers:", net_dark_carriers)
 
         self.p = deltan + net_dark_carriers
         self.n = deltan + n0
@@ -103,7 +103,7 @@ class Mobility_Klassen():
                 is the number of donor atoms (n-type)
             Na: np.array units cm^-3
                 is the number of acceptor atoms (p-type)
-            Temp: (optional, defaults to 300) 
+            Temp: (optional, defaults to 300)
                 is the temperature in kelvin
 
         Note:
@@ -151,7 +151,7 @@ class Mobility_Klassen():
 
     def Nsc(self, Type):
         """
-        This is Z**2 N_i 
+        This is Z**2 N_i
         """
         # checked
         carrier = self.return_carrer(Type, opposite=True)
@@ -288,7 +288,7 @@ class Mobility_Klassen():
 
     def PCW(self, Type):
         """
-        Eq. A3 of [1] is adjusted such that PCWe is determined with Ne,sc rather than (Z^3 Ni) 
+        Eq. A3 of [1] is adjusted such that PCWe is determined with Ne,sc rather than (Z^3 Ni)
         and PCWh is determined with Nh,sc rather than (Z^3 Ni)
         """
 
