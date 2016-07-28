@@ -134,8 +134,6 @@ class Analyser(wx.Frame, Constants):
                     # not sure why, but i'm getting double '_'
                     self.model_handeller.selected_model[
                         model_type.GetText()] = model.GetText().replace('__', '_')
-                    print(model_type.GetText(), model.GetText())
-        print(self.model_handeller.selected_model)
         self.model_handeller._update_update()
         pass
 
@@ -472,8 +470,6 @@ class Analyser(wx.Frame, Constants):
                 s = self.GrabData(b, 'Time')[0]
 
                 if self.Ouput_Lifetime.IsChecked() == True:
-                    print(s.shape, array(self.GrabData(b, u"\u0394n")).shape, array(
-                        self.GrabData(b, u"\u03C4_eff")).shape)
                     s = vstack((s.T, array(self.GrabData(b, u"\u0394n")), array(
                         self.GrabData(b, u"\u03C4_eff")))).T
 

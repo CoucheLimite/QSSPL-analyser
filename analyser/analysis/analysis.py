@@ -256,7 +256,6 @@ class Data(Constants):
                             'CropStart'] / 100 * maxindex), int(self.Wafer['CropEnd'] / 100 * maxindex), 1)
 
         self.Data = self.Data[self.index]
-        print(self.Data.shape)
 
     def EQE(self):
 

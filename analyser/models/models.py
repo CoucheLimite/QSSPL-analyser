@@ -47,7 +47,6 @@ class models_handeller():
         calling
         '''
 
-        print(self.selected_model)
         self.update = {
             'ni': NI(
                 material=self.material,

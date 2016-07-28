@@ -24,16 +24,13 @@ class Load_sinton():
         # define the lifetime class
         # get the measurement data
         file_path = os.path.join(self.Directory, self.RawDataFile)
-        print(os.path.isfile(file_path))
-        print(file_path)
+
         wb = pyxl.load_workbook(file_path, read_only=True, data_only=True)
         data = self._openpyxl_Sinton2014_ExtractRawDatadata(wb)
         inf = self._openpylx_sinton2014_extractsserdata(wb)
 
         data.dtype.names = ('Time', 'PC', 'Gen', 'PL')
         data['PC'] += inf['dark_voltage']
-
-        print(data.shape)
 
         return data
 
@@ -72,9 +69,7 @@ class Load_sinton():
         dtype = [('a', np.float64), ('b', np.float64),
                  ('c', np.float64), ('d', np.float64)]
 
-        print('values', values.shape)
         Out = values.copy().view(dtype=dtype).reshape(values.shape[0],)
-        print('out', Out.shape)
 
         time_diff = Out['a'][2] - Out['a'][1]
         for i in range(Out['a'].shape[0]):
@@ -364,7 +359,6 @@ class Load_QSSPL_File_Python():
         for i in s.split('\n')[2:-1]:
             # print i.split(':\t')[1]
             List[i.split(':\t')[0].strip()] = self.num(i.split(':\t')[1])
-        print List
 
         return List
 

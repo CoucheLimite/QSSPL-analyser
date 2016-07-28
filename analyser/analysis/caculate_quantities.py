@@ -42,8 +42,6 @@ def min_car_den_from_photoconductance(conductance,
                 Na=iNa, Nd=iNd,
                 temp=wafer_temp)
 
-        print(wafer_temp)
-
         error = np.average(np.absolute(temp - min_car_den) / min_car_den)
 
         min_car_den = temp
