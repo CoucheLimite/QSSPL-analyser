@@ -768,7 +768,7 @@ class Analyser(wx.Frame, Constants):
 
             # updating that value
             self.waferdetails.FindWindowByName(
-                ControlName).SetValue(filename[:-13])
+                ControlName).SetValue('.'.join(filename.split('.')[:-1]))
 
             # Pulling the info from the data files.
             self.Files[self.DataSet].ProvideRawDataFile(self.dirname, filename)

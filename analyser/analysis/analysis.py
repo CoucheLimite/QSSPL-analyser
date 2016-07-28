@@ -87,19 +87,23 @@ class Data(Constants):
         self.RawData = self.LD.Load_RawData_File()
         self.RawData2 = copy(self.RawData)
         self.Wafer = self.LD.Load_InfData_File()
+        print(self.Wafer)
 
     def ChoosingDefultCropValues(self):
 
-        Waveform = self.Wafer['Waveform']
+        # if no values are provided, go forth a crop
+        if self.Wafer['CropStart'] == None and self.Wafer['CropStart'] == None:
 
-        if Waveform == 'Triangle':
-            self.Wafer['CropStart'], self.Wafer['CropEnd'] = 35, 55
-        elif Waveform == 'Square':
-            self.Wafer['CropStart'], self.Wafer['CropEnd'] = 13, 50
-        elif Waveform == 'Sawtooth':
-            self.Wafer['CropStart'], self.Wafer['CropEnd'] = 12, 79
-        else:
-            self.Wafer['CropStart'], self.Wafer['CropEnd'] = 5, 95
+            Waveform = self.Wafer['Waveform']
+
+            if Waveform == 'Triangle':
+                self.Wafer['CropStart'], self.Wafer['CropEnd'] = 35, 55
+            elif Waveform == 'Square':
+                self.Wafer['CropStart'], self.Wafer['CropEnd'] = 13, 50
+            elif Waveform == 'Sawtooth':
+                self.Wafer['CropStart'], self.Wafer['CropEnd'] = 12, 79
+            else:
+                self.Wafer['CropStart'], self.Wafer['CropEnd'] = 5, 95
 
     def iVoc(self):
         PC_ivoc = CQ.iVoc_from_carriers(

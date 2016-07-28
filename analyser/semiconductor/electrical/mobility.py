@@ -104,7 +104,6 @@ class Mobility(HelperFunctions):
         '''
 
         if bool(kwargs):
-            print('here')
             self.calculationdetails = kwargs
 
         return self.hole_mobility(**kwargs) +\

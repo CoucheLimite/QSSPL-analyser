@@ -133,8 +133,8 @@ class Load_sinton():
                      'Quad': 0.0004338,
                      'Lin': 0.03611,
                      'Const': 0,
-                     'CropStart': 1,
-                     'CropEnd': 100,
+                     'CropStart': None,
+                     'CropEnd': None,
                      'Waveform': 'blank',
                      'Temp': 300,
                      }
@@ -160,6 +160,8 @@ class Load_sinton():
                 text_file.write(serialised_json)
 
         temp_list.update(List)
+
+        print(temp_list)
 
         return temp_list
 
@@ -235,6 +237,9 @@ class Load_QSSPL_File_LabView():
         Quad = l[12]
         Lin = l[12]
         Const = 0
+
+        CropStart = None
+        CropEnd = None
 
         Binning = int(l[2])
         Reflection = (1 - l[16]) * 100
@@ -345,8 +350,8 @@ class Load_QSSPL_File_Python():
         Const = 0.001440789
         Temp = 300
 
-        CropStart = 0
-        CropEnd = 100
+        CropStart = None
+        CropEnd = None
 
         List = locals()
 
@@ -448,8 +453,8 @@ class TempDep_loads():
                      'Ai': 1,
                      'Quad': 0.0004338,
                      'Lin': 0.03611,
-                     'CropStart': 0,
-                     'CropEnd': 100,
+                     'CropStart': None,
+                     'CropEnd': None,
                      }
 
         with open(os.path.join(self.Directory, InfFile), 'r') as f:
