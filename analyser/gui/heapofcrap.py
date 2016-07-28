@@ -847,7 +847,6 @@ class Analyser(wx.Frame, Constants):
         for j in range(self.Files.shape[0]):
             a = self.Files[j]
             if a.Used:
-                print(a.RawData)
                 a.CalculateLifetime(BackGroundShow=False,
                                     model_handeller=self.model_handeller)
 

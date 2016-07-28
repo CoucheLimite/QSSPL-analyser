@@ -17,7 +17,7 @@ class models_handeller():
     def __init__(self):
         self._get_available_models()
         self.selected_model = {'ni': 'Couderc_2014',
-                               'mobility': 'klaassen1992',
+                               'mobility': 'klaassen_1992',
                                'ionisation': 'Altermatt2006_table1',
                                'B': 'Altermatt2005'
                                }

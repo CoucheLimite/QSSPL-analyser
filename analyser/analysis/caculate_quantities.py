@@ -12,6 +12,7 @@ def min_car_den_from_photoconductance(conductance,
     '''
     Calculates the excess carrier density per cm^-3 from a photoconductance
     '''
+
     #
     min_car_den = np.ones(conductance.shape[0]) * 1e10
     Na, Nd = ne0, nh0
@@ -40,6 +41,8 @@ def min_car_den_from_photoconductance(conductance,
                 min_car_den=min_car_den,
                 Na=iNa, Nd=iNd,
                 temp=wafer_temp)
+
+        print(wafer_temp)
 
         error = np.average(np.absolute(temp - min_car_den) / min_car_den)
 

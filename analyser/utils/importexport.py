@@ -5,6 +5,7 @@ import sys
 from shutil import copyfile
 import json
 import openpyxl as pyxl
+import scipy.constants as C
 
 
 class Load_sinton():
@@ -94,11 +95,14 @@ class Load_sinton():
             'optical_constant': float(ws['E6'].value),
         }
 
+        user_set['Reflection'] = (1 - user_set['optical_constant']) * 100
+
         # makes a reference to the RawData page
         ws = wb.get_sheet_by_name('Settings')
 
+        # grabs the Cell ref and terns it into a FS
         sys_set = {
-            'RefCell': float(ws['C5'].value),
+            'Fs': float(ws['C5'].value) * 38 / C.e,
         }
 
         # make one dic
@@ -108,6 +112,7 @@ class Load_sinton():
         sys_set = {
             'dark_voltage': float(ws['B166'].value),
         }
+
         user_set.update(sys_set)
 
         return user_set
@@ -128,7 +133,7 @@ class Load_sinton():
                      'Quad': 0.0004338,
                      'Lin': 0.03611,
                      'Const': 0,
-                     'CropStart': 0,
+                     'CropStart': 1,
                      'CropEnd': 100,
                      'Waveform': 'blank',
                      'Temp': 300,
@@ -154,9 +159,9 @@ class Load_sinton():
             with open(InfFile, 'w+') as text_file:
                 text_file.write(serialised_json)
 
-        List.update(temp_list)
+        temp_list.update(List)
 
-        return List
+        return temp_list
 
     def Load_ProcessedData_File(self):
         DataFile = self.DataFile[:-13] + '.dat'

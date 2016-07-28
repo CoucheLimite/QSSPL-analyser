@@ -71,7 +71,6 @@ class Data(Constants):
                 self.Data['Time'], Deltan, 1e-20)
 
         elif (self.Derivitive == 'Finite Difference'):
-            print'\n\n\n\n\n', self.Data['Time']
             dn_dt = Finite_Difference().FourPointCentral(
                 self.Data['Time'], Deltan)
 
@@ -86,6 +85,7 @@ class Data(Constants):
         self.LD.RawDataFile = self.RawDataFile
 
         self.RawData = self.LD.Load_RawData_File()
+        self.RawData2 = copy(self.RawData)
         self.Wafer = self.LD.Load_InfData_File()
 
     def ChoosingDefultCropValues(self):
@@ -109,6 +109,7 @@ class Data(Constants):
         return PC_ivoc, PL_ivoc
 
     def CalculateLifetime(self, BackGroundShow=False, model_handeller=None):
+
         # make sure the ni is updated
         self._update_ni(model_handeller)
 
@@ -135,16 +136,16 @@ class Data(Constants):
 
         self.Cropping_Percentage()
 
-        """For checking background subtraction"""
-        if BackGroundShow == True:
-            fig = plt.figure('BackGround Check')
-            plt.title('BackGround Check')
-            for i in ['PC', 'PL', 'Gen']:
-                plt.plot(self.Data['Time'], self.Data[i], label=i)
-            plt.xlim(0, max(self.Raw_Time))
-            plt.legend(loc=0)
-            plt.ylim(-1, 11)
-            plt.show()
+        # """For checking background subtraction"""
+        # if BackGroundShow == True:
+        #     fig = plt.figure('BackGround Check')
+        #     plt.title('BackGround Check')
+        #     for i in ['PC', 'PL', 'Gen']:
+        #         plt.plot(self.Data['Time'], self.Data[i], label=i)
+        #     plt.xlim(0, max(self.Raw_Time))
+        #     plt.legend(loc=0)
+        #     plt.ylim(-1, 11)
+        #     plt.show()
 
         self.Data = self.Binning_Named(self.Data, self.Wafer['Binning'])
 
@@ -249,18 +250,13 @@ class Data(Constants):
     def Cropping_Percentage(self):
         # this just uses that when points are negitive they should no longer be
         # used
-        maxindex = self.Data.shape[-1]
+        maxindex = amax(self.Data.shape)
 
         self.index = arange(int(self.Wafer[
                             'CropStart'] / 100 * maxindex), int(self.Wafer['CropEnd'] / 100 * maxindex), 1)
 
-        #self.DeltaN_PL = self.DeltaN_PL [ self.index]
-        # self.DeltaN_PC = self.DeltaN_PC [ self.index]
-        # self.SS_Generation = self.SS_Generation [ self.index]
-        # self.Time = self.Time [ self.index]
         self.Data = self.Data[self.index]
-        # self.RawPCDataEdited = self.RawPCDataEdited [ self.index]
-        # self.Raw_PLEdited = self.Raw_PLEdited [ self.index]
+        print(self.Data.shape)
 
     def EQE(self):
 
