@@ -54,6 +54,7 @@ class Load_sinton():
         # add in values so that the background correction works
         for repeat in range(int(values1.shape[0] * 0.1)):
             values1 = np.vstack((values1, values1[-1, :]))
+            values1[2, -1] = 0
 
         headers1 = tuple(
             [[j.value for j in i] for i in ws['A8':'C8']][0])
@@ -102,7 +103,7 @@ class Load_sinton():
 
         # grabs the Cell ref and terns it into a FS
         sys_set = {
-            'Fs': float(ws['C5'].value) * 38 / C.e,
+            'Fs': 0.038 / C.e / float(ws['C5'].value),
         }
 
         # make one dic
