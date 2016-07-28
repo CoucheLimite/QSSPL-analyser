@@ -2,8 +2,8 @@
 
 from semiconductor.electrical.mobility import Mobility
 from semiconductor.electrical.ionisation import Ionisation as Ion
-from semiconductor.matterial.ni import IntrinsicCarrierDensity as NI
-from semiconductor.recombination.Intrinsic import Radiative
+from semiconductor.material.ni import IntrinsicCarrierDensity as NI
+from semiconductor.recombination.intrinsic import Radiative
 
 
 class models_handeller():
@@ -12,7 +12,7 @@ class models_handeller():
     '''
 
     available_models = {}
-    matterial = 'Si'
+    material = 'Si'
 
     def __init__(self):
         self._get_available_models()
@@ -23,10 +23,10 @@ class models_handeller():
                                }
         self._update_update()
 
-    def access(self, model, matterial, author, **kwargs):
+    def access(self, model, material, author, **kwargs):
 
         return self.use_models[model](
-            matterial=matterial, author=author
+            material=material, author=author
         ).update(kwargs)
 
     def _get_available_models(self):
@@ -49,22 +49,23 @@ class models_handeller():
 
         self.update = {
             'ni': NI(
-                matterial=self.matterial,
+                material=self.material,
                 author=self.selected_model['ni']
-                ).update_ni,
+            ).update,
             'mobility': Mobility(
-                matterial=self.matterial,
+                material=self.material,
                 author=self.selected_model['mobility']
-                ).mobility_sum,
+            ).mobility_sum,
             'ionisation': Ion(
-                matterial=self.matterial,
+                material=self.material,
                 author=self.selected_model['ionisation']
-                ).update_dopant_ionisation,
+            ).update_dopant_ionisation,
             'B': Radiative(
-                matterial=self.matterial,
+                material=self.material,
                 author=self.selected_model['B']
-                ).B
+            )._get_B
         }
+
     def _auto_select_models(self):
         values = self._get_available_models()
 

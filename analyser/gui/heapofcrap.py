@@ -349,7 +349,7 @@ class Analyser(wx.Frame, Constants):
         # Processes Things
 
         # self.sizar.Add(self.waferdetails.TextLoadFiles,(5,0)    ,
-            # flag=wx.ALL|wx.GROW|wx.ALIGN_CENTER,border=10)
+        # flag=wx.ALL|wx.GROW|wx.ALIGN_CENTER,border=10)
         self.sizar.Add(self.AddButton,
                        (5, 0), (1, 1), flag=wx.ALL | wx.GROW | wx.ALIGN_CENTER,
                        border=10)
@@ -422,7 +422,7 @@ class Analyser(wx.Frame, Constants):
         # labels= [self.InputPercentageStart0, self.InputPercentageEnd0, self.InputBinning0,self.InputPercentageStart1, self.InputPercentageEnd1, self.InputBinning1, self.InputPercentageStart2,self.InputPercentageEnd2,self.InputBinning2]
 
         # for label in labels:
-            # label.Bind(wx.EVT_KEY_DOWN, self.updt_frm_rawdat)
+        # label.Bind(wx.EVT_KEY_DOWN, self.updt_frm_rawdat)
 
         """Binder for fitting buttons"""
         # self.CalcEQEButton.Bind(wx.EVT_BUTTON, self.CalcEQE)
@@ -435,7 +435,7 @@ class Analyser(wx.Frame, Constants):
 
         # setting the file name
         a = self.Files[0]
-        num = a.RawDataFile[:-13].find( '_')
+        num = a.RawDataFile[:-13].find('_')
 
         # Making the header
         header = 'Time (s)\t'
@@ -488,10 +488,8 @@ class Analyser(wx.Frame, Constants):
 
         self.Files = append(self.Files, array([Data()]))
 
-
         Suffix = str(self.Files.shape[0] - 1)
         Id = float(str(self.Files.shape[0] - 1))
-
 
         offset = 0
         row = (offset + self.Files.shape[0]) * 2
@@ -636,7 +634,7 @@ class Analyser(wx.Frame, Constants):
             return 1, 1
 
         else:
-            print ('negitivie', String)
+            print('negitivie', String)
 
             return ones(handel.Tau_PC.shape[0]), ones(handel.Tau_PC.shape[0])
 
@@ -741,10 +739,11 @@ class Analyser(wx.Frame, Constants):
         self.DataSet = int(e.GetId())
         input_dic = collections.OrderedDict()
         # add what should appear as wild cards, in order
-        input_dic['All Raw data Files'] = '*Data.dat;*.tsv'
+        input_dic['All Raw data Files'] = '*Data.dat;*.tsv;*.xlsm'
         input_dic['Old QSSPL'] = '*_Raw Data.dat'
         input_dic['New QSSPL'] = '*.Raw Data.dat'
         input_dic['Temp Dep'] = '*.tsv'
+        input_dic['sinton'] = '*.xlsm'
 
         # make into format or wild cards
         ext_options = '|'.join(
@@ -820,7 +819,6 @@ class Analyser(wx.Frame, Constants):
         raw data
         '''
 
-
         if (e.GetId() > 0):
             self.DataSet = e.GetId() % 10
 
@@ -849,6 +847,7 @@ class Analyser(wx.Frame, Constants):
         for j in range(self.Files.shape[0]):
             a = self.Files[j]
             if a.Used:
+                print(a.RawData)
                 a.CalculateLifetime(BackGroundShow=False,
                                     model_handeller=self.model_handeller)
 
@@ -887,7 +886,6 @@ class Analyser(wx.Frame, Constants):
 
                 a.Analysis = self.AnaylsisType.GetValue()
                 a.Derivitive = self.DifferentialType.GetValue()
-
         a = None
 
     def CheckBoxChanged(self, e):

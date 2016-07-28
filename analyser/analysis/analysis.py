@@ -71,11 +71,12 @@ class Data(Constants):
                 self.Data['Time'], Deltan, 1e-20)
 
         elif (self.Derivitive == 'Finite Difference'):
+            print'\n\n\n\n\n', self.Data['Time']
             dn_dt = Finite_Difference().FourPointCentral(
                 self.Data['Time'], Deltan)
 
         else:
-            print ('You fucked up.... again')
+            print('You fucked up.... again')
 
         return dn_dt
 
@@ -101,12 +102,13 @@ class Data(Constants):
             self.Wafer['CropStart'], self.Wafer['CropEnd'] = 5, 95
 
     def iVoc(self):
-        PC_ivoc = CQ.iVoc_from_carriers(self.ne0,self.nh0,self.DeltaN_PC, self.Wafer['Temp'], self.ni)
-        PL_ivoc = CQ.iVoc_from_carriers(self.ne0,self.nh0,self.DeltaN_PL, self.Wafer['Temp'], self.ni)
+        PC_ivoc = CQ.iVoc_from_carriers(
+            self.ne0, self.nh0, self.DeltaN_PC, self.Wafer['Temp'], self.ni)
+        PL_ivoc = CQ.iVoc_from_carriers(
+            self.ne0, self.nh0, self.DeltaN_PL, self.Wafer['Temp'], self.ni)
         return PC_ivoc, PL_ivoc
 
     def CalculateLifetime(self, BackGroundShow=False, model_handeller=None):
-
         # make sure the ni is updated
         self._update_ni(model_handeller)
 
@@ -160,7 +162,7 @@ class Data(Constants):
         elif self.Wafer['Type'] == 'p':
             dopant = 'boron'
 
-        self.DeltaN_PL= CQ.min_car_den_from_photoluminescence(
+        self.DeltaN_PL = CQ.min_car_den_from_photoluminescence(
             self.Data['PL'],
             self.Wafer['Ai'],
             dopant,
@@ -171,14 +173,12 @@ class Data(Constants):
         self.Tau_PC = self.DeltaN_PC / self.Generation('PC')
         self.Tau_PL = self.DeltaN_PL / self.Generation('PL')
 
-
-
     def Generation(self, PCorPL, suns=False):
         try:
             Gen = getattr(
                 self, 'Generation_' + self.Analysis.replace(' ', '_'))
         except:
-            print ('Choice of generation doesn\'t exist: You fucked up')
+            print('Choice of generation doesn\'t exist: You fucked up')
 
         if suns == True:
             scale = self.Wafer['Thickness'] / 2.5e17
@@ -198,7 +198,7 @@ class Data(Constants):
         elif PCorPL == 'PL':
             return self.Data['Gen'] * self.Wafer['Fs'] * Trans / self.Wafer['Thickness'] - self.dndt(self.DeltaN_PL)
         else:
-            print ('You fucked up the Generation')
+            print('You fucked up the Generation')
 
     def Generation_Transient(self, PCorPL):
         if PCorPL == 'PC':
@@ -206,7 +206,7 @@ class Data(Constants):
         elif PCorPL == 'PL':
             return -self.dndt(self.DeltaN_PL)
         else:
-            print ('You fucked up the Generation')
+            print('You fucked up the Generation')
 
     def Local_IdealityFactor(self):
         # Generation scale doesn't matter so Generation is used
@@ -236,7 +236,6 @@ class Data(Constants):
         # plot(self.Time,self.DeltaN_PL)
         # show()
 
-
         # IndexOfNegitives,maxindex,self.DeltaN_PL[IndexOfNegitives[firstnegtive]]
 
         #self.DeltaN_PL = self.DeltaN_PL [ self.index]
@@ -248,7 +247,8 @@ class Data(Constants):
         self.Raw_PLEdited = self.Raw_PLEdited[self.index]
 
     def Cropping_Percentage(self):
-        # this just uses that when points are negitive they should no longer be used
+        # this just uses that when points are negitive they should no longer be
+        # used
         maxindex = self.Data.shape[-1]
 
         self.index = arange(int(self.Wafer[

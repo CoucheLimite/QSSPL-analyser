@@ -4,6 +4,200 @@ import os
 import sys
 from shutil import copyfile
 import json
+import openpyxl as pyxl
+
+
+class Load_sinton():
+
+    def __init__(self, Directory, RawDataFile):
+        self.Directory = Directory
+        self.RawDataFile = RawDataFile
+
+    def Load_RawData_File(self):
+        '''
+        Loads a Sinton excel and passes it into a lifetime class, with the
+        attributes automatically filled. You still need to check that the Sinton
+        excel values were correctly choosen.
+        '''
+
+        # define the lifetime class
+        # get the measurement data
+        file_path = os.path.join(self.Directory, self.RawDataFile)
+        print(os.path.isfile(file_path))
+        print(file_path)
+        wb = pyxl.load_workbook(file_path, read_only=True, data_only=True)
+        data = self._openpyxl_Sinton2014_ExtractRawDatadata(wb)
+        inf = self._openpylx_sinton2014_extractsserdata(wb)
+
+        data.dtype.names = ('Time', 'PC', 'Gen', 'PL')
+        data['PC'] += inf['dark_voltage']
+
+        return data
+
+    def _openpyxl_Sinton2014_ExtractRawDatadata(self, wb):
+        '''
+            reads the raw data a sinton WCT-120 spreadsheet form the
+            provided instance of the openpylx workbook.
+        '''
+
+        # make sure the sheet is in the book
+        assert 'Calc' in wb.get_sheet_names()
+
+        # get the worksheet
+        ws = wb.get_sheet_by_name('Calc')
+
+        # get first section of data
+        values1 = np.array([[i.value for i in j] for j in ws['A9':'C133']],
+                           dtype=np.float64)
+
+        # add in values so that the background correction works
+        for repeat in range(int(values1.shape[0] * 0.1)):
+            values1 = np.vstack((values1, values1[-1, :]))
+
+        headers1 = tuple(
+            [[j.value for j in i] for i in ws['A8':'C8']][0])
+
+        # get second section of data
+        values2 = np.zeros(values1.shape[0])
+        headers2 = ('PL',)
+
+        # form into one array with names
+        values = np.vstack((values1.T, values2)).T
+        headers = headers1 + headers2
+
+        dtype = [('a', np.float64), ('b', np.float64),
+                 ('c', np.float64), ('d', np.float64)]
+
+        Out = values.view(dtype=dtype).copy()
+
+        time_diff = Out['a'][2] - Out['a'][1]
+        for i in range(Out['a'].shape[0]):
+            Out['a'][i] = i * time_diff - time_diff
+
+        return Out
+
+    def _openpylx_sinton2014_extractsserdata(self, wb):
+
+        # make sure the sheet is in the book
+        # get the worksheet
+        assert 'User' in wb.get_sheet_names()
+        assert 'Settings' in wb.get_sheet_names()
+
+        ws = wb.get_sheet_by_name('User')
+
+        # Grabbing the data and assigning it a nae
+
+        user_set = {
+            'Thickness': float(ws['B6'].value),
+            'Doping': float(ws['J9'].value),
+            'sample_type': ws['D6'].value.encode('utf8'),
+            'optical_constant': float(ws['E6'].value),
+        }
+
+        # makes a reference to the RawData page
+        ws = wb.get_sheet_by_name('Settings')
+
+        sys_set = {
+            'RefCell': float(ws['C5'].value),
+        }
+
+        # make one dic
+        user_set.update(sys_set)
+
+        ws = wb.get_sheet_by_name('Calc')
+        sys_set = {
+            'dark_voltage': float(ws['B166'].value),
+        }
+        user_set.update(sys_set)
+
+        return user_set
+
+    def Load_InfData_File(self):
+        # print 'Still under construction'
+
+        # replace the ending with a new ending
+        InfFile = self.get_inf_name()
+        InfFile = os.path.join(self.Directory, InfFile)
+        # These are adjustment Values, requried by the following
+        temp_list = {'Doping': 1,
+                     'Thickness': 1,
+                     'Binning': 1,
+                     'Reflection': 0.0,
+                     'Fs': 1,
+                     'Ai': 1,
+                     'Quad': 0.0004338,
+                     'Lin': 0.03611,
+                     'Const': 0,
+                     'CropStart': 0,
+                     'CropEnd': 100,
+                     'Waveform': 'blank',
+                     'Temp': 300,
+                     }
+
+        if os.path.isfile(InfFile):
+            with open(InfFile, 'r') as f:
+                file_contents = f.read()
+                List = json.loads(file_contents)
+        else:
+            file_path = os.path.join(self.Directory, self.RawDataFile)
+            wb = pyxl.load_workbook(file_path, read_only=True, data_only=True)
+            List = self._openpylx_sinton2014_extractsserdata(wb)
+            temp_list.update(List)
+            serialised_json = json.dumps(
+                temp_list,
+                sort_keys=True,
+                indent=4,
+                separators=(',', ': ')
+            )
+
+            # writes to file
+            with open(InfFile, 'w+') as text_file:
+                text_file.write(serialised_json)
+
+        List.update(temp_list)
+
+        return List
+
+    def Load_ProcessedData_File(self):
+        DataFile = self.DataFile[:-13] + '.dat'
+        return np.genfromtxt(self.Directory + DataFile, usecols=(0, 1, 8, 9), unpack=True, delimiter='\t', names=('Deltan_PC', 'Tau_PC', 'Deltan_PL', 'Tau_PL'))
+
+    def WriteTo_Inf_File(self, metadata_dict):
+        '''
+        write to inf file, with "correct format" format as
+        '''
+
+        # get inf file location
+        InfFile = os.path.join(self.Directory, self.get_inf_name())
+
+        # check if there is backup, and make
+        backup_file = os.path.join(self.Directory, InfFile + ".Backup")
+        if os.path.isfile(backup_file) is False:
+
+            copyfile(InfFile, backup_file)
+            print 'Backuped original .inf  file as .inf.backup'
+
+        # specify how to output
+
+        serialised_json = json.dumps(
+            metadata_dict,
+            sort_keys=True,
+            indent=4,
+            separators=(',', ': ')
+        )
+
+        # writes to file
+        with open(InfFile, 'w') as text_file:
+            text_file.write(serialised_json)
+
+    def get_inf_name(self):
+
+        if self.RawDataFile.count('.xlsm') == 1:
+            InfFile = self.RawDataFile.replace('.xlsm', '.json')
+        else:
+            print 'stop fucking around with the name!!'
+
+        return InfFile
 
 
 class Load_QSSPL_File_LabView():
@@ -269,7 +463,7 @@ class TempDep_loads():
 
     def WriteTo_Inf_File(self, metadata_dict):
         '''
-        write to inf file, with "correct format" format as 
+        write to inf file, with "correct format" format as
         '''
 
         # get inf file location
@@ -314,12 +508,14 @@ class LoadData():
     file_ext_dic = {
         '.Raw Data.dat': 'Python',
         '_Raw Data.dat': 'Labview',
-        '.tsv': 'TempDep'
+        '.tsv': 'TempDep',
+        '.xlsm': 'sinton'
     }
     file_ext_2_class = {
         r'.Raw Data.dat': r'Load_QSSPL_File_Python',
         r'_Raw Data.dat': r'Load_QSSPL_File_LabView',
-        r'.tsv': r'TempDep_loads'
+        r'.tsv': r'TempDep_loads',
+        r'.xlsm': r'Load_sinton',
     }
 
     def obtain_operatorclass(self, Directory=None, RawDataFile=None):
@@ -332,7 +528,6 @@ class LoadData():
             # print ext, _class
 
             if ext in RawDataFile:
-
                 LoadClass = getattr(sys.modules[__name__],
                                     _class)(
                     Directory, RawDataFile)

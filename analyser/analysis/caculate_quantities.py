@@ -3,7 +3,6 @@ import numpy as np
 import scipy.constants as C
 
 
-
 def min_car_den_from_photoconductance(conductance,
                                       wafer_thickness,
                                       wafer_temp,
@@ -59,34 +58,37 @@ def min_car_den_from_photoluminescence(photoluminescence,
     Calculates the excess carrier density per cm^-3 from a photoluminescence data
     '''
 
-    #
-    min_car_den = np.ones(photoluminescence.shape[0]) * 1e10
-    i = 1
-    while (i > 0.01):
+    if np.all(photoluminescence == 0):
+        return photoluminescence
+    else:
+        #
+        min_car_den = np.ones(photoluminescence.shape[0]) * 1e10
+        i = 1
+        while (i > 0.01):
 
-        idop = model_handeller.update['ionisation'](
-            net_dopants, min_car_den, dopant,
-            temp=wafer_temp)
+            idop = model_handeller.update['ionisation'](
+                net_dopants, min_car_den, dopant,
+                temp=wafer_temp)
 
-        maj_car_den = idop + min_car_den
+            maj_car_den = idop + min_car_den
 
-        # TODO
-        B = model_handeller.update['B'](
-            min_car_den, idop, temp=wafer_temp)
+            # TODO
+            B = model_handeller.update['B'](
+                min_car_den, idop, temp=wafer_temp)
 
-        temp = (-maj_car_den +
-                np.sqrt(np.absolute(
-                    (maj_car_den)**2 + 4 * photoluminescence * Ai / B))) / 2
+            temp = (-maj_car_den +
+                    np.sqrt(np.absolute(
+                        (maj_car_den)**2 + 4 * photoluminescence * Ai / B))) / 2
 
-        i = np.average(np.absolute(temp - min_car_den) / min_car_den)
-        min_car_den = temp
+            i = np.average(np.absolute(temp - min_car_den) / min_car_den)
+            min_car_den = temp
 
-    return min_car_den
+        return min_car_den
 
 
 def iVoc_from_carriers(ne0, nh0, min_car_den, temp, ni):
     '''
-    calculates the implied voltage from the number of carriers 
+    calculates the implied voltage from the number of carriers
     '''
     ne = ne0 + min_car_den
     nh = nh0 + min_car_den

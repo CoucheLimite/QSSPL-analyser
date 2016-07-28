@@ -1,3 +1,5 @@
+#! python27
+
 """
 This is a GUI for the QSSPL system. It interfaces with USB6356 NI DAQ card.
 Currently it is assumed that the NI card is Dev3, and it reads three channels
