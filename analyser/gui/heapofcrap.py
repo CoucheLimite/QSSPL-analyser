@@ -131,9 +131,11 @@ class Analyser(wx.Frame, Constants):
 
             for model in model_type.GetSubMenu().GetMenuItems():
                 if model.IsChecked():
+                    # not sure why, but i'm getting double '_'
                     self.model_handeller.selected_model[
-                        model_type.GetText()] = model.GetText()
-
+                        model_type.GetText()] = model.GetText().replace('__', '_')
+                    print(model_type.GetText(), model.GetText())
+        print(self.model_handeller.selected_model)
         self.model_handeller._update_update()
         pass
 
@@ -143,7 +145,7 @@ class Analyser(wx.Frame, Constants):
         sizer = wx.GridBagSizer(vgap=30)
         sizer1 = wx.GridBagSizer(vgap=30)
         sizer2 = wx.GridBagSizer(vgap=30)
-        #sizers = wx.GridBagSizer()
+        # sizers = wx.GridBagSizer()
         self.scrolling = wx.ScrolledWindow(self, wx.ID_ANY)
 
         self.waferdetails()
@@ -170,7 +172,7 @@ class Analyser(wx.Frame, Constants):
         self.scrolling.SetScrollRate(10, 10)
 
     def onWidgetSetup(self, widget, sizer, row, column):
-        #widget.Bind(event, handler)
+        # widget.Bind(event, handler)
         sizer.Add(widget, (row, column), flag=wx.ALL, border=10)
         return widget
 
@@ -178,7 +180,7 @@ class Analyser(wx.Frame, Constants):
 
         self.waferdetails = wx.Panel(self.scrolling, style=0)
         self.sizar = wx.GridBagSizer()
-        #self.StaticBoxsizar =wx.GridBagSizer()
+        # self.StaticBoxsizar =wx.GridBagSizer()
 
         '''PC Coefficients'''
         # creating items
@@ -394,7 +396,8 @@ class Analyser(wx.Frame, Constants):
 
         '''load buttons'''
         """
-        labels = [self.LoadFileButton0,self.LoadFileButton1,self.LoadFileButton2]
+        labels = [self.LoadFileButton0,
+            self.LoadFileButton1,self.LoadFileButton2]
 
         for label in labels:
             label.Bind(wx.EVT_BUTTON, self.LoadRawDataFile)
@@ -407,7 +410,8 @@ class Analyser(wx.Frame, Constants):
         labels = [self.InputPCa, self.InputPCb, self.InputPCc,
                   self.InputWaferDoping, self.InputWaferThickness, self.InputDopingType]
 
-        # labels= self.InputWaferThickness,self.InputWaferDoping,self.InputDopingType
+        # labels=
+        # self.InputWaferThickness,self.InputWaferDoping,self.InputDopingType
 
         for label in labels:
             label.Bind(wx.EVT_TEXT_ENTER, self.updt_frm_prcdat)
@@ -419,7 +423,10 @@ class Analyser(wx.Frame, Constants):
             self.CheckboxBinderChangeProcessed(label)
 
         """making binds for  changing raw data"""
-        # labels= [self.InputPercentageStart0, self.InputPercentageEnd0, self.InputBinning0,self.InputPercentageStart1, self.InputPercentageEnd1, self.InputBinning1, self.InputPercentageStart2,self.InputPercentageEnd2,self.InputBinning2]
+        # labels= [self.InputPercentageStart0, self.InputPercentageEnd0,
+        # self.InputBinning0,self.InputPercentageStart1,
+        # self.InputPercentageEnd1, self.InputBinning1,
+        # self.InputPercentageStart2,self.InputPercentageEnd2,self.InputBinning2]
 
         # for label in labels:
         # label.Bind(wx.EVT_KEY_DOWN, self.updt_frm_rawdat)
@@ -465,6 +472,8 @@ class Analyser(wx.Frame, Constants):
                 s = self.GrabData(b, 'Time')[0]
 
                 if self.Ouput_Lifetime.IsChecked() == True:
+                    print(s.shape, array(self.GrabData(b, u"\u0394n")).shape, array(
+                        self.GrabData(b, u"\u03C4_eff")).shape)
                     s = vstack((s.T, array(self.GrabData(b, u"\u0394n")), array(
                         self.GrabData(b, u"\u03C4_eff")))).T
 
