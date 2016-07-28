@@ -33,6 +33,8 @@ class Load_sinton():
         data.dtype.names = ('Time', 'PC', 'Gen', 'PL')
         data['PC'] += inf['dark_voltage']
 
+        print(data.shape)
+
         return data
 
     def _openpyxl_Sinton2014_ExtractRawDatadata(self, wb):
@@ -70,7 +72,9 @@ class Load_sinton():
         dtype = [('a', np.float64), ('b', np.float64),
                  ('c', np.float64), ('d', np.float64)]
 
-        Out = values.view(dtype=dtype).copy()
+        print('values', values.shape)
+        Out = values.copy().view(dtype=dtype).reshape(values.shape[0],)
+        print('out', Out.shape)
 
         time_diff = Out['a'][2] - Out['a'][1]
         for i in range(Out['a'].shape[0]):
