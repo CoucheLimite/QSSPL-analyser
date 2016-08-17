@@ -36,8 +36,6 @@ def nxc_from_photoconductance(conductance,
             N_dop=Nd, nxc=nxc, impurity='phosphorous',
             temp=wafer_temp)
 
-        print(iNa[0], iNd[0])
-
         temp = conductance / C.e / wafer_thickness\
             / model_handeller.update['mobility'](
                 nxc=nxc,

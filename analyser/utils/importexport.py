@@ -312,7 +312,7 @@ class Load_QSSPL_File_Python():
         data = np.genfromtxt(
             self.Directory + self.RawDataFile, unpack=True, names=True, delimiter='\t')
         s = np.array([])
-        dic = {'Time_s': 'Time', 'Gen_V': 'Gen',
+        dic = {'Time_s': 'Time', 'Gen_V': 'Gen', 'Generation_V': 'Gen',
                'PL_V': 'PL', 'PC_V': 'PC'}
         # print np.array(data.dtype.names)
         for i in np.array(data.dtype.names):
