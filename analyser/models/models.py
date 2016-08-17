@@ -62,7 +62,7 @@ class models_handeller():
             ).update_dopant_ionisation,
             'B': Radiative(
                 material=self.material,
-                author=self.selected_model['B']
+                author=self.selected_model['B'],
             )._get_B
         }
 

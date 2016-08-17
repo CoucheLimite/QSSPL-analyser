@@ -81,6 +81,7 @@ class Radiative(HelperFunctions):
         'ni_author': None,
         'Na': 1,
         'Nd': 1e16,
+        'nxc': 1e12
     }
 
     def __init__(self, **kwargs):
@@ -108,7 +109,7 @@ class Radiative(HelperFunctions):
         ne0, nh0 = get_carriers(
             Na=self._cal_dts['Na'],
             Nd=self._cal_dts['Nd'],
-            nxc=0,
+            nxc=self._cal_dts['nxc'],
             ni_author=self._cal_dts['ni_author'],
             temp=self._cal_dts['temp']
         )
@@ -122,19 +123,37 @@ class Radiative(HelperFunctions):
     def itau(self, nxc, **kwargs):
         return 1. / self.tau(nxc, **kwargs)
 
-    def _get_B(self):
+    def _get_Blow(self):
 
         # if there is a model for blow, apply it
         if 'blow_model' in self.vals.keys():
             vals, model = change_model(self.Models, self.vals['blow_vals'])
 
             B = getattr(radmdls, self.vals['blow_model'])(
-                vals, self._cal_dts['temp']
-            )
+                vals=vals, temp=self._cal_dts['temp'])
 
         # else use the constant value
         else:
             B = self.vals['b']
+
+        return B
+
+    def _get_B(self, **kwargs):
+        self.calculationdetails = kwargs
+        # if there is a model for blow, apply it
+        if 'doping' not in kwargs.keys():
+            kwargs['doping'] = abs(self._cal_dts['Na'] -
+                                   self._cal_dts['Nd'])
+
+        if 'b_model' in self.vals.keys():
+            B = getattr(radmdls, self.vals['b_model'])(
+                vals=self.vals, temp=self._cal_dts['temp'],
+                nxc=self._cal_dts['nxc'],
+                doping=kwargs['doping'],
+                Blow=self._get_Blow())
+        else:
+            B = self._get_Blow()
+
         return B
 
 

@@ -34,6 +34,7 @@ def get_carriers(Na, Nd, nxc,
     if not isinstance(nxc, np.ndarray):
         nxc = np.array([nxc])
 
+    # print('enter', Na.shape, Na.shape, nxc.shape)
     # if ni not provided obtain
     if ni is None:
         ni = NI(material=material).update(author=ni_author, temp=temp)
@@ -46,10 +47,19 @@ def get_carriers(Na, Nd, nxc,
     # more accurately incorporates ni though, which is particularly important
     # for temperature dependent measurements.
 
-    maj_car_den = (0.5 * (np.abs(Nd - Na) +
-                          np.sqrt((Nd - Na)**2 + 4 * ni**2)))
-    min_car_den = ni**2 / maj_car_den
+    maj_car_den = 0.5 * (np.abs(Nd - Na) +
+                         np.sqrt((Nd - Na)**2 + 4 * ni**2))
 
+    if not isinstance(maj_car_den, np.ndarray):
+        # print('is not instance', maj_car_den)
+        maj_car_den = np.array([maj_car_den])
+        # print('now is ', maj_car_den)
+    if len(maj_car_den.shape) == 0:
+        # print('length 0 ', maj_car_den)
+        maj_car_den = np.array([maj_car_den])
+        # print('after change is ', maj_car_den)
+
+    min_car_den = ni**2 / maj_car_den
     # assign the dark minority carriers
     ne0 = np.copy(min_car_den)
     nh0 = np.copy(min_car_den)
@@ -58,6 +68,8 @@ def get_carriers(Na, Nd, nxc,
     # if the number of donars are larger
     index = Na < Nd
 
+    # print(maj_car_den, index, Na, Nd)
+    # print(maj_car_den[~index], maj_car_den[index])
     nh0[~index] = maj_car_den[~index]
     ne0[index] = maj_car_den[index]
 
@@ -65,22 +77,26 @@ def get_carriers(Na, Nd, nxc,
     assert ne0.shape == nh0.shape
 
     # make the excess carrier the right shape to add
-    nxc_m = nxc * np.ones((nxc.shape[0], ne0.shape[0]))
+    nxc_m = nxc * np.ones(nxc.shape[0])
 
     # add them to the dark carriers
     ne = ne0 + nxc_m
     nh = nh0 + nxc_m
-
+    # print('the adding shapes', ne0.shape, nxc_m.shape)
     # To make sure an array the same shape as the input array is returned
     # Note this function does not play well if  both an array of dopants
     # and excess carrerier densities are passed
+    # print(ne0, type(ne0), maj_car_den, type(maj_car_den))
+    # print(ne0.shape)
 
-    if ne0.shape[0] == 1:
-        ne = ne[0]
-        nh = nh[0]
-    else:
-        ne = ne.flatten()
-        nh = nh.flatten()
+    # if ne0.shape[0] == 1:
+    #     ne = ne[0]
+    #     nh = nh[0]
+    # else:
+    #     ne = ne.flatten()
+    #     nh = nh.flatten()
+
+    # print('exit', ne.shape, nh.shape)
 
     return ne, nh
 

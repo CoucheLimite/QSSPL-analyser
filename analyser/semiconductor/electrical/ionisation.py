@@ -133,19 +133,24 @@ class Ionisation(HelperFunctions):
 
         N_idop = N_dop
 
+        if not isinstance(N_idop, np.ndarray):
+            N_idop = np.asarray([N_idop])
+
+        if not isinstance(N_dop, np.ndarray):
+            N_dop = np.asarray([N_dop])
+
         if impurity in self.vals.keys():
             # TO DO, change this from just running 10 times to a proper check
             for i in range(10):
                 if self.vals['tpe_' + self.vals[impurity]] == 'donor':
-                    Nd = np.array(N_idop)
+                    Nd = np.copy(N_idop)
                     Na = np.zeros(Nd.shape)
                 elif self.vals['tpe_' + self.vals[impurity]] == 'acceptor':
-                    Na = np.array(N_idop)
+                    Na = np.copy(N_idop)
                     Nd = np.zeros(Na.shape)
                 else:
                     print('something went wrong in ionisation model')
 
-                # print('here:', Na, Nd, nxc)
                 ne, nh = CF.get_carriers(
                     Na,
                     Nd,
@@ -156,6 +161,7 @@ class Ionisation(HelperFunctions):
 
                 N_idop = self.update(
                     N_dop, ne, nh, impurity)
+
         else:
             print(r'Not a valid impurity, returning 100% ionisation')
 
@@ -182,7 +188,7 @@ class Ionisation(HelperFunctions):
 
             if not np.all(iN_imp == 0):
                 plt.plot(
-                 N_imp, iN_imp / N_imp * 100, label='Altermatt: ' + impurity)
+                    N_imp, iN_imp / N_imp * 100, label='Altermatt: ' + impurity)
 
         test_file = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),

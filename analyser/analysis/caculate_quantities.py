@@ -14,7 +14,7 @@ def min_car_den_from_photoconductance(conductance,
     '''
 
     #
-    min_car_den = np.ones(conductance.shape[0]) * 1e10
+    nxc = np.ones(conductance.shape[0]) * 1e10
     Na, Nd = ne0, nh0
 
     # as the mobility is a function of carrier density,
@@ -38,15 +38,15 @@ def min_car_den_from_photoconductance(conductance,
 
         temp = conductance / C.e / wafer_thickness\
             / mobility(
-                min_car_den=min_car_den,
+                nxc=nxc,
                 Na=iNa, Nd=iNd,
                 temp=wafer_temp)
 
-        error = np.average(np.absolute(temp - min_car_den) / min_car_den)
+        error = np.average(np.absolute(temp - nxc) / nxc)
 
-        min_car_den = temp
+        nxc = temp
 
-    return min_car_den
+    return nxc
 
 
 def min_car_den_from_photoluminescence(photoluminescence,
@@ -63,34 +63,33 @@ def min_car_den_from_photoluminescence(photoluminescence,
         return photoluminescence
     else:
         #
-        min_car_den = np.ones(photoluminescence.shape[0]) * 1e10
+        nxc = np.ones(photoluminescence.shape[0]) * 1e10
         i = 1
         while (i > 0.01):
 
             idop = model_handeller.update['ionisation'](
-                net_dopants, min_car_den, dopant,
+                net_dopants, nxc, dopant,
                 temp=wafer_temp)
 
-            maj_car_den = idop + min_car_den
+            maj_car_den = idop + nxc
 
-            # TODO
             B = model_handeller.update['B'](
-                min_car_den, idop, temp=wafer_temp)
+                nxc=nxc, doping=idop, temp=wafer_temp)
 
             temp = (-maj_car_den +
                     np.sqrt(np.absolute(
                         (maj_car_den)**2 + 4 * photoluminescence * Ai / B))) / 2
 
-            i = np.average(np.absolute(temp - min_car_den) / min_car_den)
-            min_car_den = temp
+            i = np.average(np.absolute(temp - nxc) / nxc)
+            nxc = temp
 
-        return min_car_den
+        return nxc
 
 
-def iVoc_from_carriers(ne0, nh0, min_car_den, temp, ni):
+def iVoc_from_carriers(ne0, nh0, nxc, temp, ni):
     '''
     calculates the implied voltage from the number of carriers
     '''
-    ne = ne0 + min_car_den
-    nh = nh0 + min_car_den
+    ne = ne0 + nxc
+    nh = nh0 + nxc
     return C.k * temp / C.e * np.log(ne * nh / np.power(ni, 2))
