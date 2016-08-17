@@ -154,24 +154,24 @@ class Data(Constants):
         self.Data = self.Binning_Named(self.Data, self.Wafer['Binning'])
 
         model_handeller._update_update()
-        self.DeltaN_PC = CQ.min_car_den_from_photoconductance(
+        self.DeltaN_PC = CQ.nxc_from_photoconductance(
             self.Data['PC'],
             self.Wafer['Thickness'],
             self.Wafer['Temp'],
             self.ne0,
             self.nh0,
-            model_handeller.update['mobility'])
+            model_handeller)
 
         if self.Wafer['Type'] == 'n':
             dopant = 'phosphorous'
         elif self.Wafer['Type'] == 'p':
             dopant = 'boron'
 
-        self.DeltaN_PL = CQ.min_car_den_from_photoluminescence(
+        self.DeltaN_PL = CQ.nxc_from_photoluminescence(
             self.Data['PL'],
             self.Wafer['Ai'],
             dopant,
-            max(self.ne0, self.nh0),
+            abs(self.ne0 - self.nh0),
             self.Wafer['Temp'],
             model_handeller)
 

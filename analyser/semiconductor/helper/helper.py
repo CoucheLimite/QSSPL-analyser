@@ -47,7 +47,6 @@ class HelperFunctions(object):
 
     @property
     def calculationdetails(self):
-        print('kwargs being viewed')
         return self._cal_dts
 
     @calculationdetails.setter
@@ -62,7 +61,12 @@ class HelperFunctions(object):
             items = [i for i in kwargs.keys() if i in self._cal_dts.keys()]
 
             for item in items:
-                self._cal_dts[item] = kwargs[item]
+                if item in self._cal_dts.keys():
+                    self._cal_dts[item] = kwargs[item]
+                else:
+                    print('item:', item)
+                    print('not in dictionary:', self._cal_dts.keys())
+                    print(self._cal_dts['author'])
 
     #         self._update_links()
     # def _update_links(self):

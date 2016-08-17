@@ -3,12 +3,12 @@ import numpy as np
 import scipy.constants as C
 
 
-def min_car_den_from_photoconductance(conductance,
-                                      wafer_thickness,
-                                      wafer_temp,
-                                      ne0,
-                                      nh0,
-                                      mobility):
+def nxc_from_photoconductance(conductance,
+                              wafer_thickness,
+                              wafer_temp,
+                              ne0,
+                              nh0,
+                              model_handeller):
     '''
     Calculates the excess carrier density per cm^-3 from a photoconductance
     '''
@@ -17,14 +17,8 @@ def min_car_den_from_photoconductance(conductance,
     nxc = np.ones(conductance.shape[0]) * 1e10
     Na, Nd = ne0, nh0
 
-    # as the mobility is a function of carrier density,
-    # this needs to be iterated a few times (usually less than 5 times)
     error = 1
     while (error > 0.01):
-
-        # TO DO
-        # the below line takes is provide n0 and p0 and not the doping of
-        # each. This needs to be fixed.
         # assumption: mobility only matters on the ionised dopants
 
         # iNa = Ion('Si').update_dopant_ionisation(Na, self.DeltaN_PC, 'phosphorous',
@@ -33,11 +27,19 @@ def min_car_den_from_photoconductance(conductance,
         #                      temp=self.Wafer['Temp'], author=None)
 
         # current just on the number of dopants
-        iNa = Na
-        iNd = Nd
+
+        iNa = model_handeller.update['ionisation'](
+            N_dop=Na, nxc=nxc, impurity='boron',
+            temp=wafer_temp)
+
+        iNd = model_handeller.update['ionisation'](
+            N_dop=Nd, nxc=nxc, impurity='phosphorous',
+            temp=wafer_temp)
+
+        print(iNa[0], iNd[0])
 
         temp = conductance / C.e / wafer_thickness\
-            / mobility(
+            / model_handeller.update['mobility'](
                 nxc=nxc,
                 Na=iNa, Nd=iNd,
                 temp=wafer_temp)
@@ -49,12 +51,12 @@ def min_car_den_from_photoconductance(conductance,
     return nxc
 
 
-def min_car_den_from_photoluminescence(photoluminescence,
-                                       Ai,
-                                       dopant,
-                                       net_dopants,
-                                       wafer_temp,
-                                       model_handeller):
+def nxc_from_photoluminescence(photoluminescence,
+                               Ai,
+                               dopant,
+                               net_dopants,
+                               wafer_temp,
+                               model_handeller):
     '''
     Calculates the excess carrier density per cm^-3 from a photoluminescence data
     '''
@@ -68,7 +70,7 @@ def min_car_den_from_photoluminescence(photoluminescence,
         while (i > 0.01):
 
             idop = model_handeller.update['ionisation'](
-                net_dopants, nxc, dopant,
+                N_dop=net_dopants, nxc=nxc, impurity=dopant,
                 temp=wafer_temp)
 
             maj_car_den = idop + nxc
