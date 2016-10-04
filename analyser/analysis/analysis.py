@@ -20,7 +20,7 @@ def find_nearest(array, value):
 
 class Data(Constants):
 
-    Derivitive = 'Regularised'
+    Derivitive = 'Finite Difference'
     Analysis = 'Generalised'
     Type = 'p'
     CropStart = 0
@@ -66,11 +66,11 @@ class Data(Constants):
 
     def dndt(self, Deltan):
 
-        if (self.Derivitive == 'Regularised'):
-            dn_dt = Regularisation().FirstDerivative(
-                self.Data['Time'], Deltan, 1e-20)
+        # if (self.Derivitive == 'Regularised'):
+        #     dn_dt = Regularisation().FirstDerivative(
+        #         self.Data['Time'], Deltan, 1e-20)
 
-        elif (self.Derivitive == 'Finite Difference'):
+        if (self.Derivitive == 'Finite Difference'):
             dn_dt = Finite_Difference().FourPointCentral(
                 self.Data['Time'], Deltan)
 
@@ -217,12 +217,12 @@ class Data(Constants):
         # Generation scale doesn't matter so Generation is used
         iVocPC, iVocPL = self.iVoc()
 
-        if (self.Derivitive == 'Regularised'):
-            return  (self.Generation('PC')) / (self.Vt * Regularisation().FirstDerivative       (self.Data['Time'], self.Generation('PC'), 1e-20) / Regularisation().FirstDerivative  (self.Data['Time'], iVocPC, 1e-20)),\
-                    (self.Generation('PL')) / (self.Vt * Regularisation().FirstDerivative(self.Data['Time'], self.Generation(
-                        'PL'), 1e-20) / Regularisation().FirstDerivative(self.Data['Time'], iVocPL, 1e-20))
+        # if (self.Derivitive == 'Regularised'):
+        #     return  (self.Generation('PC')) / (self.Vt * Regularisation().FirstDerivative       (self.Data['Time'], self.Generation('PC'), 1e-20) / Regularisation().FirstDerivative  (self.Data['Time'], iVocPC, 1e-20)),\
+        #             (self.Generation('PL')) / (self.Vt * Regularisation().FirstDerivative(self.Data['Time'], self.Generation(
+        #                 'PL'), 1e-20) / Regularisation().FirstDerivative(self.Data['Time'], iVocPL, 1e-20))
 
-        elif (self.Derivitive == 'Finite Difference'):
+        if (self.Derivitive == 'Finite Difference'):
             return  (self.Generation('PC')) / (self.Vt * Finite_Difference().FourPointCentral   (self.Data['Time'], self.Generation('PC'))     / Finite_Difference().FourPointCentral(self.Data['Time'], iVocPC)),\
                     (self.Generation('PL')) / (self.Vt * Finite_Difference().FourPointCentral(self.Data[
                         'Time'], self.Generation('PL')) / Finite_Difference().FourPointCentral(self.Data['Time'], iVocPL))

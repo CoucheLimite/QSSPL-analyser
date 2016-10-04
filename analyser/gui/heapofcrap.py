@@ -229,7 +229,7 @@ class Analyser(wx.Frame, Constants):
         self.DifferentialType_label = self.onWidgetSetup(wx.StaticText(
             self.waferdetails, label="Derivative Method"), Anaylsis_Box_contence, 0, 1)
         self.DifferentialType = self.onWidgetSetup(wx.ComboBox(self.waferdetails, value='Finite Difference', choices=[
-                                                   'Regularised', 'Finite Difference'], style=wx.CB_READONLY), Anaylsis_Box_contence, 1, 1)
+                                                   'Finite Difference'], style=wx.CB_READONLY), Anaylsis_Box_contence, 1, 1)
 
         # Adding box
         AnaylsisBox_box = wx.StaticBoxSizer(self.AnaylsisBox, wx.VERTICAL)
