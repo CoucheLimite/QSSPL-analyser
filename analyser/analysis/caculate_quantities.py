@@ -71,7 +71,7 @@ def nxc_from_photoluminescence(photoluminescence,
                 N_dop=net_dopants, nxc=nxc, impurity=dopant,
                 temp=wafer_temp)
 
-            maj_car_den = idop + nxc
+            maj_car_den = idop
 
             B = model_handeller.update['B'](
                 nxc=nxc, doping=idop, temp=wafer_temp)
