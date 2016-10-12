@@ -37,11 +37,13 @@ from numpy import *
 
 import collections
 # from string import find
-from models.ConstantsClass import *
+# from models.ConstantsClass import *
 from gui.CanvasClass import *
 
+import scipy.constants as C
 
-from models.MobilityV2 import Mobility_Klassen as Mobility
+
+# from models.MobilityV2 import Mobility_Klassen as Mobility
 from analysis.analysis import Data
 
 from utils.importexport import LoadData
@@ -57,7 +59,12 @@ def SplitName(FileName, separator, suffix, block):
         return ''
 
 
-class Analyser(wx.Frame, Constants):
+class Analyser(wx.Frame):
+
+    # Initial values
+    Quad = 4.3380E-4
+    Lin = 3.6110E-2
+    Const = 0.001440789
 
     def __init__(self, *args, **kw):
 
@@ -242,7 +249,7 @@ class Analyser(wx.Frame, Constants):
 
         tau_string = u"\u03C4_eff"
         deltan_string = u"\u0394n"
-        Delta_conductance = u"\u0394\u03C3"
+        # Delta_conductance = u"\u0394\u03C3"
         Conductance_string = u"\u03C3"
 
         self.Plotting_Choice = wx.StaticBox(
@@ -252,7 +259,7 @@ class Analyser(wx.Frame, Constants):
         self.y_axis_label = self.onWidgetSetup(wx.StaticText(
             self.waferdetails, label="y-axis"), Plotting_Choice_Box_contence, 0, 0)
         self.y_axis = self.onWidgetSetup(wx.ComboBox(self.waferdetails, value=tau_string, choices=[
-                                         u"\u0394n", tau_string, 'Generation', 'Generation (Suns)', 'Time', 'iVoc', u"\u0394\u03C3", u"\u03C3", 'Ideality Factor'], style=wx.CB_READONLY), Plotting_Choice_Box_contence, 1, 0)
+                                         u"\u0394n", tau_string, 'Generation', 'Generation (Suns)', 'Time', 'iVoc', u"\u0394\u03C3", 'Ideality Factor'], style=wx.CB_READONLY), Plotting_Choice_Box_contence, 1, 0)
         self.x_axis_label = self.onWidgetSetup(wx.StaticText(
             self.waferdetails, label="x-axis"), Plotting_Choice_Box_contence, 0, 1)
         self.x_axis = self.onWidgetSetup(wx.ComboBox(self.waferdetails, value=deltan_string, choices=[
@@ -618,10 +625,18 @@ class Analyser(wx.Frame, Constants):
             return handel.iVoc()
 
         elif(String == u"\u0394\u03C3"):
-            return handel.Data['PC'], handel.DeltaN_PL * self.q * Mobility().mobility_sum(handel.DeltaN_PL, handel.ne0, handel.nh0, handel.Wafer['Temp']) * handel.Wafer['Thickness']
+            PL_sudo_mobility = self.model_handeller.update['mobility'](
+                nxc=handel.DeltaN_PL,
+                Na=handel.nh0,
+                Nd=handel.ne0,
+                temp=handel.Wafer['Temp'])
+            return handel.Data['PC'], handel.DeltaN_PL * C.e * PL_sudo_mobility * handel.Wafer['Thickness']
 
-        elif(String == u"\u03C3"):
-            return handel.Raw_PCEdited + handel.DarkConductance, handel.DeltaN_PL * self.q * Mobility().mobility_sum(handel.DeltaN_PL, handel.ne0, handel.nh0, handel.Wafer['Temp']) * handel.Thickness + handel.DarkConductance
+        # elif(String == u"\u03C3"):
+        # return handel.Raw_PCEdited + handel.DarkConductance, handel.DeltaN_PL
+        # * C.e * Mobility().mobility_sum(handel.DeltaN_PL, handel.ne0,
+        # handel.nh0, handel.Wafer['Temp']) * handel.Thickness +
+        # handel.DarkConductance
 
         elif(String == 'Ideality Factor'):
             return handel.Local_IdealityFactor()
@@ -812,6 +827,7 @@ class Analyser(wx.Frame, Constants):
                 i + str(self.DataSet)).SetValue(
                 '{0:.2e}'.format(self.Files[self.DataSet].Wafer[i]))
 
+        print self.Files[self.DataSet].Wafer.keys()
         for i in ['Reflection', 'CropStart', 'CropEnd', 'Binning', 'Temp']:
             self.waferdetails.FindWindowByName(
                 i + str(self.DataSet)).SetValue(

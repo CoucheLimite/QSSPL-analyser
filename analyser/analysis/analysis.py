@@ -3,9 +3,9 @@
 from numpy import *
 import matplotlib.pylab as plt
 
-from models.ConstantsClass import *
+# from models.ConstantsClass import *
 
-from models.NumericalDifferentiation_windows import Finite_Difference, Regularisation
+from models.NumericalDifferentiation_windows import Finite_Difference
 
 from utils.importexport import LoadData
 import scipy.constants as C
@@ -18,7 +18,7 @@ def find_nearest(array, value):
     return idx
 
 
-class Data(Constants):
+class Data():
 
     Derivitive = 'Finite Difference'
     Analysis = 'Generalised'
@@ -269,3 +269,16 @@ class Data(Constants):
 
         idx = find_nearest(self.Generation('PL'), 2.5e17 / self.Thickness / 10)
         return self.RawPCDataEdited[idx] / self.Generation('PC')[idx], self.Raw_PLEdited[idx] / self.Generation('PL')[idx] * self.Ai
+
+    def Binning_Named(self, data, BinAmount):
+
+        if len(data.dtype.names) != 1:
+            data2 = copy(data)[::BinAmount]
+
+        for i in data.dtype.names:
+            for j in range(data.shape[0] // BinAmount):
+
+                data2[i][j] = mean(
+                    data[i][j * BinAmount:(j + 1) * BinAmount], axis=0)
+
+        return data2

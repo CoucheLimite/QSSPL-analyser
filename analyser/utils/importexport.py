@@ -232,8 +232,8 @@ class Load_QSSPL_File_LabView():
         Ai = l[6]
         Fs = l[7]
         Thickness = l[12]
-        Quad = l[12]
-        Lin = l[12]
+        Quad = l[13]
+        Lin = l[14]
         Const = 0
 
         CropStart = None
@@ -457,6 +457,7 @@ class TempDep_loads():
                      'Lin': 0.03611,
                      'CropStart': None,
                      'CropEnd': None,
+                     'Waveform': None,
                      }
 
         with open(os.path.join(self.Directory, InfFile), 'r') as f:
