@@ -1,6 +1,8 @@
 
 import numpy as np
 import scipy.constants as C
+from .NumericalDifferentiation_windows import FourPointCentral
+from scipy import optimize as op
 
 
 def pc_from_voltage(V, a, b, c):
@@ -116,3 +118,127 @@ def iVoc_from_carriers(ne0, nh0, nxc, temp, ni):
     ne = ne0 + nxc
     nh = nh0 + nxc
     return C.k * temp / C.e * np.log(ne * nh / np.power(ni, 2))
+
+
+def selfConsistant_PL(time, gen_V, pl_V, wafer_inf, Na, Nd, model_handeller):
+    '''
+    Performs self consutent analsys to determine the generation rate.
+    by updating Fs
+    '''
+    wafer_inf2 = dict(wafer_inf)
+    gen = generation(time, gen_V, 0, wafer_inf, 'ss')
+    index = np.argmax(gen)
+
+    def _SC(value):
+
+        wafer_inf2['Ai'] = abs(value)
+
+        nxc = nxc_from_photoluminescence(
+            pl_V / wafer_inf['gain_pl'],
+            wafer_inf2['Ai'],
+            wafer_inf['dopant'],
+            Na,
+            Nd,
+            wafer_inf['Temp'],
+            model_handeller)
+
+        nxc0 = nxc[:index]
+        nxc1 = nxc[index:]
+
+        gen = generation(time, gen_V, nxc, wafer_inf, 'generalised')
+
+        tau = nxc / gen
+
+        tau0 = tau[:index]
+        tau1 = tau[index:]
+
+        if np.amin(nxc0) < np.amin(nxc1):
+            tau0 = np.interp(nxc1, nxc0, tau0)
+        else:
+            tau1 = np.interp(nxc0, nxc1[::-1], tau1[::-1])
+
+        return np.sum(np.abs((tau1 - tau0) / tau0)) * 10
+
+    res = op.minimize_scalar(
+        _SC,
+        bracket=(wafer_inf['Ai'] / 10, wafer_inf['Ai'] * 10),
+        method='brent')
+
+    return abs(res.x)
+
+
+def selfConsistant_gen(time, gen_V, nxc, wafer_inf):
+    '''
+    Performs self consutent analsys to determine the generation rate.
+    by updating Fs
+    '''
+    wafer_inf2 = dict(wafer_inf)
+    gen = generation(time, gen_V, nxc, wafer_inf, 'ss')
+    # tau = nxc / gen
+
+    index = np.argmax(gen)
+    nxc0 = nxc[:index]
+    nxc1 = nxc[index:]
+
+    def _SC(value):
+
+        wafer_inf2['Fs'] = abs(value)
+
+        gen = generation(time, gen_V, nxc, wafer_inf2, 'generalised')
+
+        tau = nxc / gen
+        tau0 = tau[:index]
+        tau1 = tau[index:]
+
+        if np.amin(nxc0) < np.amin(nxc1):
+            tau0 = np.interp(nxc1, nxc0, tau0)
+        else:
+            tau1 = np.interp(nxc0, nxc1[::-1], tau1[::-1])
+
+        return np.sum(np.abs((tau1 - tau0) / tau0)) * 10
+
+    res = op.minimize_scalar(
+        _SC,
+        bracket=(wafer_inf['Fs'] / 100, wafer_inf['Fs'] * 100),
+        method='Golden')
+
+    return abs(res.x)
+
+
+def generation(time, gen_V, nxc, wafer_inf, anal_type):
+
+    function = {
+        'generalised': _generation_generalised,
+        'ss': _generation_steady_state,
+        'trans': _generation_transient,
+    }
+
+    assert anal_type in function
+
+    gen = function[anal_type](time, gen_V, nxc, wafer_inf)
+
+    # if suns == True:
+    #     scale = wafer_inf['thickness'] / 2.5e17
+    # else:
+    #     scale = 1.
+
+    return gen
+
+
+def _generation_steady_state(time, gen_V, nxc, wafer_inf):
+    transmission = (1 - wafer_inf['reflection'] / 100.)
+    return gen_V * wafer_inf['Fs'] / wafer_inf['gain_gen'] * transmission / wafer_inf['thickness']
+
+
+def _generation_generalised(time, gen_V, nxc, wafer_inf):
+
+    gen = _generation_steady_state(time, gen_V, nxc, wafer_inf
+                                   ) + _generation_transient(time, gen_V, nxc, wafer_inf)
+
+    return gen
+
+
+def _generation_transient(time, gen_V, nxc, wafer_inf):
+    gen = -FourPointCentral(time,
+                            nxc)
+    return gen

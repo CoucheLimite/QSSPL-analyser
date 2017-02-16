@@ -6,7 +6,6 @@ import os
 
 from glob import glob
 
-from models.NumericalDifferentiation_windows import Finite_Difference
 from models.models import models_handeller
 
 from utils.importexport import LoadData
@@ -71,8 +70,6 @@ class data_loader():
 
         j = 0
         for i in self.datas:
-            print(i.RawData2.shape, i.RawData2.dtype.names)
-            print(i.RawData.shape)
             ax.plot(i.RawData['Time'], i.RawData['PL'], '-')
             ax.plot(i.RawData['Time'], i.RawData['Gen'], '--')
             ax.plot(i.RawData['Time'], i.RawData['PC'], '.-')
@@ -110,11 +107,41 @@ class data_loader():
         for data in self.datas:
             data.save()
 
+    def self_consistant_generation(self, index, data):
+        temp = dict(self.datas[index].wafer_inf)
+
+        self.datas[index].wafer_inf['cropStart'] = None
+        self.datas[index].wafer_inf['cropEnd'] = None
+        self.datas[index].wafer_inf['signal_cutoff'] = 100
+
+        self.datas[index].CalculateLifetime(
+            model_handeller=self.model_handeller)
+
+        value = self.datas[index].self_consistant_generation(data)
+        self.datas[index].wafer_inf = dict(temp)
+
+        return value
+
+    def self_consistant_PL(self, index):
+        temp = dict(self.datas[index].wafer_inf)
+
+        self.datas[index].wafer_inf['cropStart'] = None
+        self.datas[index].wafer_inf['cropEnd'] = None
+        self.datas[index].wafer_inf['signal_cutoff'] = 100
+
+        self.datas[index].CalculateLifetime(
+            model_handeller=self.model_handeller)
+
+        value = self.datas[index].self_consistant_PL(self.model_handeller)
+        self.datas[index].wafer_inf = dict(temp)
+
+        return value
+
 
 class Data():
 
     Derivitive = 'Finite Difference'
-    Analysis = 'Generalised'
+    analysis = 'generalised'
     Temp = -1
 
     def __init__(self, fname=None):
@@ -163,17 +190,6 @@ class Data():
     def UpdateInfData(self):
         self.LD.WriteTo_Inf_File(self.wafer_inf)
 
-    def dndt(self, Deltan):
-
-        if (self.Derivitive == 'Finite Difference'):
-            dn_dt = Finite_Difference().FourPointCentral(
-                self.Data['Time'], Deltan)
-
-        else:
-            print('You fucked up.... again')
-
-        return dn_dt
-
     def Load_Measurements(self, fname):
 
         if os.sep in fname:
@@ -200,6 +216,7 @@ class Data():
         self.Data, self.DarkConductance = _background_correction(
             self.RawData, self.wafer_inf)
 
+        self.ChoosingDefultCropValues()
         self.Data = crop_data(self.Data, self.wafer_inf)
 
         self.Data = bin_named_array(self.Data, self.wafer_inf['binning_pp'])
@@ -223,47 +240,37 @@ class Data():
             self.wafer_inf['Temp'],
             model_handeller)
 
-        self.Tau_PC = self.DeltaN_PC / self.Generation('PC')
-        self.Tau_PL = self.DeltaN_PL / self.Generation('PL')
+        self.Tau_PC = self.DeltaN_PC / self.generation('PC')
+        self.Tau_PL = self.DeltaN_PL / self.generation('PL')
 
         # CQ.doping_from_pc(self.DarkConductance,
         #                   self.wafer_inf, model_handeller)
 
         return self.Tau_PC, self.Tau_PL
 
-    def Generation(self, PCorPL, suns=False):
-        try:
-            Gen = getattr(
-                self, 'Generation_' + self.Analysis.replace(' ', '_'))
-        except:
-            print('Choice of generation doesn\'t exist: You fucked up')
+    def generation(self, switch):
+        '''
+        Provides the generation for each of the data types.
+        '''
+        nxc = getattr(self, 'DeltaN_' + switch)
+        return CQ.generation(self.Data['Time'], self.Data['Gen'], nxc, self.wafer_inf, self.analysis)
 
-        if suns == True:
-            scale = self.wafer_inf['thickness'] / 2.5e17
-        else:
-            scale = 1.
-
-        return Gen(PCorPL) * scale
-
-    def Generation_Steady_State(self, PCorPL):
-        Trans = (1 - self.wafer_inf['reflection'] / 100.)
-        return self.Data['Gen'] * self.wafer_inf['Fs'] /self.wafer_inf['gain_gen'] * Trans / self.wafer_inf['thickness']
-
-    def Generation_Generalised(self, PCorPL):
-        Trans = (1 - self.wafer_inf['reflection'] / 100.)
-
-        gen = self.Generation_Steady_State(PCorPL) + self.Generation_Transient(PCorPL)
+    def self_consistant_generation(self, data):
+        nxc = getattr(self, 'DeltaN_' + data)
+        gen = CQ.selfConsistant_gen(self.Data['Time'], self.Data[
+                                    'Gen'], nxc, self.wafer_inf)
 
         return gen
 
-    def Generation_Transient(self, PCorPL):
-        if PCorPL == 'PC':
-            gen = -self.dndt(self.DeltaN_PC)
-        elif PCorPL == 'PL':
-            gen = -self.dndt(self.DeltaN_PL)
-        else:
-            gen = 0
-            print('You fucked up the Generation')
+    def self_consistant_PL(self, model_handeller):
+        nxc = getattr(self, 'DeltaN_' + 'PL')
+        gen = CQ.selfConsistant_PL(self.Data['Time'],
+                                   self.Data['Gen'],
+                                   self.Data['PL'],
+                                   self.wafer_inf,
+                                   self.Na,
+                                   self.Nd,
+                                   model_handeller)
 
         return gen
 
@@ -337,10 +344,13 @@ def _cropping_index(data, wafer_inf):
     '''
     Tries to find the cropping based on the noise in the PL channel
     '''
+    if 'signal_cutoff' not in wafer_inf:
+        wafer_inf['signal_cutoff'] = 10
 
     if wafer_inf['cropStart'] == None and wafer_inf['cropStart'] == None:
         if 'bkg_pl_std' in wafer_inf:
-            index = data['PL'] > wafer_inf['bkg_pl_std'] * 7
+            index = data['PL'] > wafer_inf[
+                'bkg_pl_std'] * wafer_inf['signal_cutoff']
 
             indexs = np.linspace(0, 1, data['PL'].shape[0])
             wafer_inf['cropStart'], wafer_inf[
