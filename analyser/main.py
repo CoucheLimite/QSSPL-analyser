@@ -1,30 +1,37 @@
-#! python27
-
-"""
-This is a GUI for the QSSPL system. It interfaces with USB6356 NI DAQ card.
-Currently it is assumed that the NI card is Dev3, and it reads three channels
-and outputs on 1. This could all be changed, but i'm not sure why I want to
-yet.
-
-    To use this the NI drives need to be installed!
-
-Things to improve:
-
-    Definition of Dev/ and channels
-    Selectable inputs and output voltage ranges.
-    Make that you can't load incorrect values (int and floats at least)
-"""
-
-from gui.heapofcrap import Analyser
-import wx
+#! py -2
 
 
-def main():
+from models.models import models_handeller
+import matplotlib.pylab as plt
 
-    # False stands for?
-    app = wx.App(False)
-    Analyser(False)
-    app.MainLoop()
+from analysis.analysis import data_loader
 
-if __name__ == "__main__":
-    main()
+
+model_handeller = models_handeller()
+
+
+if __name__ == '__main__':
+
+    # folder = input('Please enter the folder:')
+    # sample = input('Please enter the sample name:')
+
+    folder = r'C:\Users\z3186867'
+    sample = 'hamid_oxide_'
+    data = data_loader(folder, sample)
+
+    for i in ['doping_type', 'doping', 'thickness', 'reflection']:
+        if data.attr[i] is None:
+            var = input('Please enter the ' + i + ':')
+            try:
+                data.attr = {i: float(var)}
+            except:
+                data.attr = {i: var}
+        else:
+            print(data.attr[i], i)
+
+    data.calculate()
+
+    plt.ion()
+    ax = data.plot()
+    data.save()
+# plt.show()

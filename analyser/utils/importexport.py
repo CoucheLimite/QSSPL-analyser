@@ -10,9 +10,9 @@ import scipy.constants as C
 
 class Load_sinton():
 
-    def __init__(self, Directory, RawDataFile):
-        self.Directory = Directory
-        self.RawDataFile = RawDataFile
+    def __init__(self, fname):
+        self.Directory = os.path.dirname(fname)
+        self.RawDataFile = os.path.basename(fname)
 
     def Load_RawData_File(self):
         '''
@@ -89,13 +89,13 @@ class Load_sinton():
         # Grabbing the data and assigning it a nae
 
         user_set = {
-            'Thickness': float(ws['B6'].value),
-            'Doping': float(ws['J9'].value),
+            'thickness': float(ws['B6'].value),
+            'doping': float(ws['J9'].value),
             'sample_type': ws['D6'].value.encode('utf8'),
             'optical_constant': float(ws['E6'].value),
         }
 
-        user_set['Reflection'] = (1 - user_set['optical_constant']) * 100
+        user_set['reflection'] = (1 - user_set['optical_constant']) * 100
 
         # makes a reference to the RawData page
         ws = wb.get_sheet_by_name('Settings')
@@ -124,18 +124,18 @@ class Load_sinton():
         InfFile = self.get_inf_name()
         InfFile = os.path.join(self.Directory, InfFile)
         # These are adjustment Values, requried by the following
-        temp_list = {'Doping': 1,
-                     'Thickness': 1,
-                     'Binning': 1,
-                     'Reflection': 0.0,
+        temp_list = {'doping': 1,
+                     'thickness': 1,
+                     'binning_pp': 1,
+                     'reflection': 0.0,
                      'Fs': 1,
                      'Ai': 1,
                      'Quad': 0.0004338,
                      'Lin': 0.03611,
                      'Const': 0,
-                     'CropStart': None,
-                     'CropEnd': None,
-                     'Waveform': 'blank',
+                     'cropStart': None,
+                     'cropEnd': None,
+                     'waveform': 'blank',
                      'Temp': 300,
                      }
 
@@ -180,7 +180,7 @@ class Load_sinton():
         if os.path.isfile(backup_file) is False:
 
             copyfile(InfFile, backup_file)
-            print 'Backuped original .inf  file as .inf.backup'
+            print('Backuped original .inf  file as .inf.backup')
 
         # specify how to output
 
@@ -200,33 +200,34 @@ class Load_sinton():
         if self.RawDataFile.count('.xlsm') == 1:
             InfFile = self.RawDataFile.replace('.xlsm', '.json')
         else:
-            print 'stop fucking around with the name!!'
+            print('Don\'t change the files names')
 
         return InfFile
 
 
 class Load_QSSPL_File_LabView():
 
-    def __init__(self, Directory, RawDataFile):
-        self.Directory = Directory
-        self.RawDataFile = RawDataFile
+    def __init__(self, fname):
+        self.Directory = os.path.dirname(fname)
+        self.RawDataFile = os.path.basename(fname)
 
     def Load_RawData_File(self):
         return np.genfromtxt(os.path.join(self.Directory, self.RawDataFile),
                              names=('Time', 'PC', 'Gen', 'PL'))
 
     def Load_InfData_File(self):
-        InfFile = self.RawDataFile[:-13] + '.inf'
+        InfFile = os.path.join(self.Directory, self.RawDataFile).replace(
+            '_Raw Data.dat', '.inf')
 
         '''info from inf file '''
 
         Cycles, dump, Frequency, LED_Voltage, dump, dump, dump, dump, DataPoints, dump = np.genfromtxt(
-            self.Directory + InfFile, skip_header=20, skip_footer=22, delimiter=':', usecols=(1), autostrip=True, unpack=True)
+            InfFile, skip_header=20, skip_footer=22, delimiter=':', usecols=(1), autostrip=True, unpack=True)
         Waveform, LED_intensity = np.genfromtxt(
-            self.Directory + InfFile, skip_header=31, skip_footer=20, delimiter=':', usecols=(1), dtype=None, autostrip=True, unpack=True)
+            InfFile, skip_header=31, skip_footer=20, delimiter=':', usecols=(1), dtype=None, autostrip=True, unpack=True)
 
         l = np.genfromtxt(
-            self.Directory + InfFile, skip_header=36, delimiter=':', usecols=(1))
+            InfFile, skip_header=36, delimiter=':', usecols=(1))
 
         Doping = l[9]
         Ai = l[6]
@@ -235,6 +236,7 @@ class Load_QSSPL_File_LabView():
         Quad = l[13]
         Lin = l[14]
         Const = 0
+        Temp = 300
 
         CropStart = None
         CropEnd = None
@@ -261,7 +263,7 @@ class Load_QSSPL_File_LabView():
         if (os.path.isfile(self.Directory + InfFile + ".Backup") == False):
             copyfile(
                 self.Directory + InfFile, self.Directory + InfFile + ".Backup")
-            print 'Backuped original .inf  file as .inf.backup'
+            print('Backuped original .inf  file as .inf.backup')
 
         ####
         # Creating the .inf file, this can be done more easily with list(f), but i'm not using it right now.
@@ -275,24 +277,24 @@ class Load_QSSPL_File_LabView():
         for i in range(38):
             s = s + f.readline()
         s = s + f.readline()[:26] + \
-            '{0:.0f}'.format(Dictionary['Binning']) + '\n'
+            '{0:.0f}'.format(Dictionary['binning_pp']) + '\n'
         for i in range(3):
             s = s + f.readline()
         s = s + f.readline()[:5] + '{0:.3e}'.format(Dictionary['Ai']) + '\n'
         s = s + f.readline()[:11] + '{0:.3e}'.format(Dictionary['Fs']) + '\n'
         s = s + f.readline()
         s = s + f.readline()[:23] + \
-            '{0:.3e}'.format(Dictionary['Doping']) + '\n'
+            '{0:.3e}'.format(Dictionary['doping']) + '\n'
         s = s + f.readline()
         s = s + f.readline()
         s = s + f.readline()[:12] + \
-            '{0:.4f}'.format(Dictionary['Thickness']) + '\n'
+            '{0:.4f}'.format(Dictionary['thickness']) + '\n'
         s = s + f.readline()[:24] + '{0:.4e}'.format(Dictionary['Quad']) + '\n'
         s = s + f.readline()[:21] + '{0:.4e}'.format(Dictionary['Lin']) + '\n'
         s = s + f.readline()
         s = s + \
             f.readline()[
-                :37] + '{0:.6f}'.format(1 - Dictionary['Reflection'] / 100) + '\n'
+                :37] + '{0:.6f}'.format(1 - Dictionary['reflection'] / 100) + '\n'
 
         for i in range(6):
             s = s + f.readline()
@@ -304,9 +306,9 @@ class Load_QSSPL_File_LabView():
 
 class Load_QSSPL_File_Python():
 
-    def __init__(self, Directory, RawDataFile):
-        self.Directory = Directory
-        self.RawDataFile = RawDataFile
+    def __init__(self, fname):
+        self.Directory = os.path.dirname(fname)
+        self.RawDataFile = os.path.basename(fname)
 
     def Load_RawData_File(self):
         data = np.genfromtxt(
@@ -337,10 +339,10 @@ class Load_QSSPL_File_Python():
         InfFile = self.RawDataFile[:-13] + '.inf'
 
         # These are adjustment Values
-        Doping = 1
-        Thickness = 1
+        doping = 1
+        thickness = 1
         Binning = 1
-        Reflection = 0.0
+        reflection = 0.0
         Fs = 1
         Ai = 1
         Quad = 0.0004338
@@ -370,7 +372,7 @@ class Load_QSSPL_File_Python():
         return List
 
     def Load_ProcessedData_File(self):
-        print 'Still under construction'
+        print('Still under construction')
 
         return zeros(4, 4)
 
@@ -381,7 +383,7 @@ class Load_QSSPL_File_Python():
         if (os.path.isfile(self.Directory + InfFile + ".Backup") == False):
             copyfile(
                 self.Directory + InfFile, self.Directory + InfFile + ".Backup")
-            print 'Backuped original .inf  file as .inf.backup'
+            print('Backuped original .inf  file as .inf.backup')
 
         s = 'MJ system\r\nList of vaiables:\r\n'
         for i in Dictionary:
@@ -392,11 +394,11 @@ class Load_QSSPL_File_Python():
             text_file.write(s)
 
 
-class TempDep_loads():
+class Python_auto_load():
 
-    def __init__(self, Directory, RawDataFile):
-        self.Directory = Directory
-        self.RawDataFile = RawDataFile
+    def __init__(self, fname):
+        self.Directory = os.path.dirname(fname)
+        self.RawDataFile = os.path.basename(fname)
 
     def Load_RawData_File(self):
         '''
@@ -447,36 +449,53 @@ class TempDep_loads():
         InfFile = self.get_inf_name()
 
         # These are adjustment Values, requried by the following
-        temp_list = {'Doping': 1,
-                     'Thickness': 1,
-                     'Binning': 1,
-                     'Reflection': 0.0,
-                     'Fs': 1,
-                     'Ai': 1,
+        temp_list = {'doping': None,
+                     'thickness': None,
+                     'binning_pp': 1,
+                     'reflection': None,
+                     'doping_type': None,
+                     'Fs': 1.0727E+20,
+                     'Ai': 3e22,
                      'Quad': 0.0004338,
                      'Lin': 0.03611,
-                     'CropStart': None,
-                     'CropEnd': None,
-                     'Waveform': None,
+                     'Const': 0,
+                     'cropStart': None,
+                     'cropEnd': None,
+                     'waveform': None,
+                     'Temp': 300,
+                     'gain_pl': 1,
+                     'gain_gen': 1,
                      }
 
         with open(os.path.join(self.Directory, InfFile), 'r') as f:
             file_contents = f.read()
             List = json.loads(file_contents)
 
-        List.update(temp_list)
+        # get rid of Nones in the dict
+        dic = {k: v for k, v in List.items() if v is not None}
 
-        return List
+        temp_list.update(dic)
+
+        return temp_list
 
     def Load_ProcessedData_File(self):
-        print 'Still under construction'
+        print('Still under construction')
 
         return zeros(4, 4)
+
+    def processed_data(self, data):
+
+        fname = os.path.join(self.Directory, self.RawDataFile).replace(
+            '_Raw_Data.dat', '.dat'
+        )
+        np.savetxt(fname,  data, delimiter='\t')
 
     def WriteTo_Inf_File(self, metadata_dict):
         '''
         write to inf file, with "correct format" format as
         '''
+        # metadata_dict['Ai'] *= metadata_dict['gain_pl']
+        # List['Fs'] *= List['gain_gen']
 
         # get inf file location
         InfFile = os.path.join(self.Directory, self.get_inf_name())
@@ -486,7 +505,7 @@ class TempDep_loads():
         if os.path.isfile(backup_file) is False:
 
             copyfile(InfFile, backup_file)
-            print 'Backuped original .inf  file as .inf.backup'
+            print('Backuped original .inf  file as .inf.backup')
 
         # specify how to output
 
@@ -503,46 +522,168 @@ class TempDep_loads():
 
     def get_inf_name(self):
 
+        if self.RawDataFile.count('_Raw_Data.dat') == 1:
+            InfFile = self.RawDataFile.replace('_Raw_Data.dat', '.json')
+        else:
+            print('stop fucking around with the name!!')
+
+        return InfFile
+
+
+class TempDep_loads():
+
+    def __init__(self, fname):
+        self.Directory = os.path.dirname(fname)
+        self.RawDataFile = os.path.basename(fname)
+
+    def Load_RawData_File(self):
+        '''
+        Loads the measured data from the data file.
+        This has the file extension tsv (tab seperated values)
+
+        from a provided file name,
+        takes data and outputs data with specific column headers
+        '''
+
+        # get data, something stange was happening with os.path.join
+        file_location = os.path.normpath(
+            os.path.join(self.Directory, self.RawDataFile))
+
+        data = np.genfromtxt(
+            os.path.join(file_location),
+            unpack=True, names=True, delimiter='\t')
+
+        # string to convert file names to program names
+        dic = {'Time_s': 'Time', 'Generation_V': 'Gen',
+               'PL_V': 'PL', 'PC_V': 'PC'}
+
+        # create empty array
+        s = np.array([])
+
+        # build array of names, in correct order
+        for i in np.array(data.dtype.names):
+            s = np.append(s, dic[i])
+
+        # assign names
+        data.dtype.names = s
+
+        return data
+
+    def num(self, s):
+        '''
+        converts s to a number, or returns s
+        '''
+        try:
+            return float(s)
+        except ValueError:
+            return s
+
+    def Load_InfData_File(self):
+        # print 'Still under construction'
+
+        # replace the ending with a new ending
+        InfFile = self.get_inf_name()
+
+        # These are adjustment Values, requried by the following
+        temp_list = {'doping': 1,
+                     'thickness': 1,
+                     'binning_pp': 1,
+                     'reflection': 0.0,
+                     'Fs': 1,
+                     'Ai': 1,
+                     'quad': 0.0004338,
+                     'lin': 0.03611,
+                     'constant': 0,
+                     'cropStart': None,
+                     'cropEnd': None,
+                     'waveform': None,
+                     }
+
+        with open(os.path.join(self.Directory, InfFile), 'r') as f:
+            file_contents = f.read()
+            List = json.loads(file_contents)
+
+        List.update(temp_list)
+
+        return List
+
+    def Load_ProcessedData_File(self):
+        print('Still under construction')
+
+        return zeros(4, 4)
+
+    def WriteTo_Inf_File(self, metadata_dict):
+        '''
+        write to inf file, with "correct format" format as
+        '''
+
+        # get inf file location
+        InfFile = os.path.join(self.Directory, self.get_inf_name())
+
+        # check if there is backup, and make
+        backup_file = os.path.join(self.Directory, InfFile + ".Backup")
+        if os.path.isfile(backup_file) is False:
+
+            copyfile(InfFile, backup_file)
+            print('Backuped original .inf  file as .inf.backup')
+
+        # specify how to output
+
+        serialised_json = json.dumps(
+            metadata_dict,
+            sort_keys=True,
+            indent=4,
+            separators=(',', ': ')
+        )
+
+        print('this is what is happenting')
+        print(InfFile)
+        # writes to file
+        with open(InfFile, 'w') as text_file:
+            text_file.write(serialised_json)
+
+    def get_inf_name(self):
+
         if self.RawDataFile.count('.tsv') == 1:
             InfFile = self.RawDataFile.replace('.tsv', '.json')
         else:
-            print 'stop fucking around with the name!!'
+            print('stop fucking around with the name!!')
 
         return InfFile
 
 
 class LoadData():
 
-    Directory = ''
-    RawDataFile = ''
+    fname = ''
     File_Type = ''
 
     file_ext_dic = {
         '.Raw Data.dat': 'Python',
         '_Raw Data.dat': 'Labview',
+        '_Raw_Data.dat': 'Python_auto',
         '.tsv': 'TempDep',
         '.xlsm': 'sinton'
     }
+
     file_ext_2_class = {
         r'.Raw Data.dat': r'Load_QSSPL_File_Python',
         r'_Raw Data.dat': r'Load_QSSPL_File_LabView',
+        r'_Raw_Data.dat': r'Python_auto_load',
         r'.tsv': r'TempDep_loads',
         r'.xlsm': r'Load_sinton',
     }
 
-    def obtain_operatorclass(self, Directory=None, RawDataFile=None):
-        if Directory is None:
-            Directory = self.Directory
-            RawDataFile = self.RawDataFile
+    def obtain_operatorclass(self, fname=None):
+        if fname is None:
+            fname = self.fname
+
         LoadClass = None
 
-        for ext, _class in self.file_ext_2_class.iteritems():
-            # print ext, _class
+        for ext, _class in self.file_ext_2_class.items():
 
-            if ext in RawDataFile:
+            if ext in fname:
                 LoadClass = getattr(sys.modules[__name__],
-                                    _class)(
-                    Directory, RawDataFile)
+                                    _class)(fname)
 
         return LoadClass
 
@@ -558,9 +699,17 @@ class LoadData():
         LoadClass = self.obtain_operatorclass()
         return LoadClass.Load_ProcessedData_File()
 
-    def WriteTo_Inf_File(self, Dict):
+    def save(self, data, settings):
+        self.WriteTo_Inf_File(settings)
+        self.WriteTo_processed_data(data)
+
+    def WriteTo_processed_data(self, data):
         LoadClass = self.obtain_operatorclass()
-        return LoadClass.WriteTo_Inf_File(Dict)
+        return LoadClass.processed_data(data)
+
+    def WriteTo_Inf_File(self, settings):
+        LoadClass = self.obtain_operatorclass()
+        return LoadClass.WriteTo_Inf_File(settings)
 
 if __name__ == "__main__":
     Folder = r'C:\git\ui\pvapp\test\data'

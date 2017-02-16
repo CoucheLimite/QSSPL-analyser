@@ -1,16 +1,19 @@
 
 
-from numpy import *
+import numpy as np
 import matplotlib.pylab as plt
+import os
 
-# from models.ConstantsClass import *
+from glob import glob
 
 from models.NumericalDifferentiation_windows import Finite_Difference
+from models.models import models_handeller
 
 from utils.importexport import LoadData
 import scipy.constants as C
 
-import caculate_quantities as CQ
+from . import caculate_quantities as CQ
+import semiconductor.electrical as el
 
 
 def find_nearest(array, value):
@@ -18,57 +21,149 @@ def find_nearest(array, value):
     return idx
 
 
+class data_loader():
+
+    def __init__(self, folder=None, sample=None):
+        self.folder = folder
+        self.sample = sample
+
+        self.model_handeller = models_handeller()
+        if self.folder is not None and self.sample is not None:
+            self.load()
+
+    def load(self, folder=None, sample=None):
+        self.folder = folder or self.folder
+        self.sample = sample or self.sample
+
+        self.datas = []
+
+        for fname in glob(os.path.join(self.folder, self.sample) + '*_Raw_Data.dat'):
+            self.datas.append(Data(fname))
+            self.datas[-1].ChoosingDefultCropValues()
+
+    def calculate(self):
+        for i in self.datas:
+            i.CalculateLifetime(
+                model_handeller=self.model_handeller)
+
+    def plot(self, ax=None):
+
+        if ax is None:
+            fig, ax = plt.subplots(1)
+
+        j = 0
+        for i in self.datas:
+            ax.plot(i.DeltaN_PC, i.Tau_PC, '-', label=str(j))
+            ax.plot(i.DeltaN_PL, i.Tau_PL, '-')
+            j += 1
+
+        ax.semilogx()
+        ax.semilogy()
+        ax.set_xlabel('Excess carrier density (cm^-3)')
+        ax.set_ylabel('Lifetime (s^-1)')
+
+        return ax
+
+    def plot_raw(self, ax=None):
+
+        if ax is None:
+            fig, ax = plt.subplots(1)
+
+        j = 0
+        for i in self.datas:
+            print(i.RawData2.shape, i.RawData2.dtype.names)
+            print(i.RawData.shape)
+            ax.plot(i.RawData['Time'], i.RawData['PL'], '-')
+            ax.plot(i.RawData['Time'], i.RawData['Gen'], '--')
+            ax.plot(i.RawData['Time'], i.RawData['PC'], '.-')
+
+        ax.semilogx()
+        ax.semilogy()
+        ax.set_xlabel('time')
+        ax.set_ylabel('voltage')
+
+        return ax
+
+    @property
+    def attr(self):
+        return self.datas[0].wafer_inf
+
+    def adjust(self, var, percent):
+        dic = {var: self.datas[0].wafer_inf[var] * (1 + percent / 100.)}
+        self.set_attr(**dic)
+        self.calculate()
+
+    @attr.setter
+    def attr(self, kwargs):
+
+        for key, value in kwargs.items():
+            if key in self.datas[0].wafer_inf:
+                for i in self.datas:
+                    i.wafer_inf[key] = value
+
+    def adjust(self, var, percent):
+        dic = {var: self.datas[0].wafer_inf[var] * (1 + percent / 100.)}
+        self.attr = dic
+        self.calculate()
+
+    def save(self):
+        for data in self.datas:
+            data.save()
+
+
 class Data():
 
     Derivitive = 'Finite Difference'
     Analysis = 'Generalised'
-    Type = 'p'
-    CropStart = 0
-    CropEnd = 100
-    BackgroundSubtraction = 0.95
-    Used = False
     Temp = -1
 
-    def __init__(self):
+    def __init__(self, fname=None):
         self.LD = LoadData()
 
+        if fname is not None:
+            self.Load_Measurements(fname)
+
     def _update_ni(self, model_handeller):
-        if self.Temp != self.Wafer['Temp']:
-            self.ni = model_handeller.update['ni'](temp=self.Wafer['Temp'])
-            self.Temp = self.Wafer['Temp']
+        if self.Temp != self.wafer_inf['Temp']:
+            self.ni = model_handeller.update['ni'](temp=self.wafer_inf['Temp'])
+            self.Temp = self.wafer_inf['Temp']
             self.Vt = C.k * self.Temp / C.e
         pass
 
-    def BackgrounConcentration(self):
-        if (self.Type == 'p'):
-            self.nh0 = self.Wafer['Doping']
-            self.ne0 = self.ni**2 / self.Wafer['Doping']
+    def save(self):
 
-        elif(self.Type == 'n'):
-            self.ne0 = self.Wafer['Doping']
-            self.nh0 = self.ni**2 / self.Wafer['Doping']
-        else:
-            self.ne0 = 1e20
-            self.nh0 = 1e20
+        data = np.vstack((
+            self.DeltaN_PC,
+            self.Tau_PC,
+            self.DeltaN_PL,
+            self.Tau_PL
+        )).T
 
-        pass
+        self.LD.save(data, self.wafer_inf)
 
-    def ProvideRawDataFile(self, Directory, RawDataFile):
-        self.Directory = Directory + '/'
-        self.RawDataFile = RawDataFile
+    def background_doping(self, model_handeller):
+        if (self.wafer_inf['doping_type'] == 'p'):
+            self.Na = self.wafer_inf['doping']
+            self.Nd = 0
+            self.wafer_inf['dopant'] = 'boron'
 
-        self.Used = True
+        elif(self.wafer_inf['doping_type'] == 'n'):
+            self.Nd = self.wafer_inf['doping']
+            self.Na = 0
+            self.wafer_inf['dopant'] = 'phosphorous'
 
-        self.Load_Measurements()
+        self.ne0, self.nh0 = el.get_carriers(Na=self.Na,
+                                             Nd=self.Nd,
+                                             nxc=0,
+                                             temp=self.wafer_inf['Temp'],
+                                             ni_author=model_handeller.selected_model[
+                                                 'ni'],
+                                             ionisation_author=model_handeller.selected_model['ionisation'])
 
     def UpdateInfData(self):
-        self.LD.WriteTo_Inf_File(self.Wafer)
+        self.LD.WriteTo_Inf_File(self.wafer_inf)
 
     def dndt(self, Deltan):
-
-        # if (self.Derivitive == 'Regularised'):
-        #     dn_dt = Regularisation().FirstDerivative(
-        #         self.Data['Time'], Deltan, 1e-20)
 
         if (self.Derivitive == 'Finite Difference'):
             dn_dt = Finite_Difference().FourPointCentral(
@@ -79,38 +174,18 @@ class Data():
 
         return dn_dt
 
-    def Load_Measurements(self):
+    def Load_Measurements(self, fname):
 
-        self.LD.Directory = self.Directory
-        self.LD.RawDataFile = self.RawDataFile
+        if os.sep in fname:
+            self.LD.fname = fname
 
         self.RawData = self.LD.Load_RawData_File()
-        self.RawData2 = copy(self.RawData)
-        self.Wafer = self.LD.Load_InfData_File()
-        print(self.Wafer)
+        self.RawData2 = np.copy(self.RawData)
+        self.wafer_inf = self.LD.Load_InfData_File()
 
     def ChoosingDefultCropValues(self):
 
-        # if no values are provided, go forth a crop
-        if self.Wafer['CropStart'] == None and self.Wafer['CropStart'] == None:
-
-            Waveform = self.Wafer['Waveform']
-
-            if Waveform == 'Triangle':
-                self.Wafer['CropStart'], self.Wafer['CropEnd'] = 35, 55
-            elif Waveform == 'Square':
-                self.Wafer['CropStart'], self.Wafer['CropEnd'] = 13, 50
-            elif Waveform == 'Sawtooth':
-                self.Wafer['CropStart'], self.Wafer['CropEnd'] = 12, 79
-            else:
-                self.Wafer['CropStart'], self.Wafer['CropEnd'] = 5, 95
-
-    def iVoc(self):
-        PC_ivoc = CQ.iVoc_from_carriers(
-            self.ne0, self.nh0, self.DeltaN_PC, self.Wafer['Temp'], self.ni)
-        PL_ivoc = CQ.iVoc_from_carriers(
-            self.ne0, self.nh0, self.DeltaN_PL, self.Wafer['Temp'], self.ni)
-        return PC_ivoc, PL_ivoc
+        _cropping_index(self.RawData, self.wafer_inf)
 
     def CalculateLifetime(self, BackGroundShow=False, model_handeller=None):
 
@@ -118,65 +193,43 @@ class Data():
         self._update_ni(model_handeller)
 
         # determine the background concentration of carriers
-        self.BackgrounConcentration()
+        self.background_doping(model_handeller)
 
         # Background correction stuff
-        BackgroundIndex = int(self.RawData['Time'].shape[0] * .95)
-        self.Data = copy(self.RawData)
 
-        for i in ['PL', 'Gen']:
-            self.Data[i] -= average(self.Data[i][BackgroundIndex:])
+        self.Data, self.DarkConductance = _background_correction(
+            self.RawData, self.wafer_inf)
 
-        self.Data['PC'] = self.Wafer['Quad'] * \
-            (self.Data['PC']) * (self.Data['PC']) + \
-            self.Wafer['Lin'] * (self.Data['PC']) + self.Wafer['Const']
+        self.Data = crop_data(self.Data, self.wafer_inf)
 
-        '''for now just use the 95% limit to cal background'''
-        """background subtraction"""
-        self.DarkConductance = average(self.Data['PC'][BackgroundIndex:])
-        for i in ['PC']:
-
-            self.Data[i] -= average(self.Data[i][BackgroundIndex:])
-
-        self.Cropping_Percentage()
-
-        # """For checking background subtraction"""
-        # if BackGroundShow == True:
-        #     fig = plt.figure('BackGround Check')
-        #     plt.title('BackGround Check')
-        #     for i in ['PC', 'PL', 'Gen']:
-        #         plt.plot(self.Data['Time'], self.Data[i], label=i)
-        #     plt.xlim(0, max(self.Raw_Time))
-        #     plt.legend(loc=0)
-        #     plt.ylim(-1, 11)
-        #     plt.show()
-
-        self.Data = self.Binning_Named(self.Data, self.Wafer['Binning'])
+        self.Data = bin_named_array(self.Data, self.wafer_inf['binning_pp'])
 
         model_handeller._update_update()
+
         self.DeltaN_PC = CQ.nxc_from_photoconductance(
             self.Data['PC'],
-            self.Wafer['Thickness'],
-            self.Wafer['Temp'],
+            self.wafer_inf['thickness'],
+            self.wafer_inf['Temp'],
             self.ne0,
             self.nh0,
             model_handeller)
 
-        if self.Wafer['Type'] == 'n':
-            dopant = 'phosphorous'
-        elif self.Wafer['Type'] == 'p':
-            dopant = 'boron'
-
         self.DeltaN_PL = CQ.nxc_from_photoluminescence(
-            self.Data['PL'],
-            self.Wafer['Ai'],
-            dopant,
-            abs(self.ne0 - self.nh0),
-            self.Wafer['Temp'],
+            self.Data['PL'] / self.wafer_inf['gain_pl'],
+            self.wafer_inf['Ai'],
+            self.wafer_inf['dopant'],
+            self.Na,
+            self.Nd,
+            self.wafer_inf['Temp'],
             model_handeller)
 
         self.Tau_PC = self.DeltaN_PC / self.Generation('PC')
         self.Tau_PL = self.DeltaN_PL / self.Generation('PL')
+
+        # CQ.doping_from_pc(self.DarkConductance,
+        #                   self.wafer_inf, model_handeller)
+
+        return self.Tau_PC, self.Tau_PL
 
     def Generation(self, PCorPL, suns=False):
         try:
@@ -186,99 +239,112 @@ class Data():
             print('Choice of generation doesn\'t exist: You fucked up')
 
         if suns == True:
-            scale = self.Wafer['Thickness'] / 2.5e17
+            scale = self.wafer_inf['thickness'] / 2.5e17
         else:
             scale = 1.
 
         return Gen(PCorPL) * scale
 
     def Generation_Steady_State(self, PCorPL):
-        Trans = (1 - self.Wafer['Reflection'] / 100.)
-        return self.Data['Gen'] * self.Wafer['Fs'] * Trans / self.Wafer['Thickness']
+        Trans = (1 - self.wafer_inf['reflection'] / 100.)
+        return self.Data['Gen'] * self.wafer_inf['Fs'] /self.wafer_inf['gain_gen'] * Trans / self.wafer_inf['thickness']
 
     def Generation_Generalised(self, PCorPL):
-        Trans = (1 - self.Wafer['Reflection'] / 100.)
-        if PCorPL == 'PC':
-            return self.Data['Gen'] * self.Wafer['Fs'] * Trans / self.Wafer['Thickness'] - self.dndt(self.DeltaN_PC)
-        elif PCorPL == 'PL':
-            return self.Data['Gen'] * self.Wafer['Fs'] * Trans / self.Wafer['Thickness'] - self.dndt(self.DeltaN_PL)
-        else:
-            print('You fucked up the Generation')
+        Trans = (1 - self.wafer_inf['reflection'] / 100.)
+
+        gen = self.Generation_Steady_State(PCorPL) + self.Generation_Transient(PCorPL)
+
+        return gen
 
     def Generation_Transient(self, PCorPL):
         if PCorPL == 'PC':
-            return -self.dndt(self.DeltaN_PC)
+            gen = -self.dndt(self.DeltaN_PC)
         elif PCorPL == 'PL':
-            return -self.dndt(self.DeltaN_PL)
+            gen = -self.dndt(self.DeltaN_PL)
         else:
+            gen = 0
             print('You fucked up the Generation')
 
-    def Local_IdealityFactor(self):
-        # Generation scale doesn't matter so Generation is used
-        iVocPC, iVocPL = self.iVoc()
+        return gen
 
-        # if (self.Derivitive == 'Regularised'):
-        #     return  (self.Generation('PC')) / (self.Vt * Regularisation().FirstDerivative       (self.Data['Time'], self.Generation('PC'), 1e-20) / Regularisation().FirstDerivative  (self.Data['Time'], iVocPC, 1e-20)),\
-        #             (self.Generation('PL')) / (self.Vt * Regularisation().FirstDerivative(self.Data['Time'], self.Generation(
-        #                 'PL'), 1e-20) / Regularisation().FirstDerivative(self.Data['Time'], iVocPL, 1e-20))
 
-        if (self.Derivitive == 'Finite Difference'):
-            return  (self.Generation('PC')) / (self.Vt * Finite_Difference().FourPointCentral   (self.Data['Time'], self.Generation('PC'))     / Finite_Difference().FourPointCentral(self.Data['Time'], iVocPC)),\
-                    (self.Generation('PL')) / (self.Vt * Finite_Difference().FourPointCentral(self.Data[
-                        'Time'], self.Generation('PL')) / Finite_Difference().FourPointCentral(self.Data['Time'], iVocPL))
+def crop_data(data, wafer_inf):
+    # this just uses that when points are negitive they should no longer be
+    # used
+    maxindex = np.amax(data.shape)
 
-    def Cropping_negitives(self):
-        # this just uses that when points are negitive they should no longer be
-        # used
-        maxindex = argmax(self.SS_Generation)
+    index = np.arange(int(wafer_inf[
+        'cropStart'] / 100 * maxindex), int(wafer_inf['cropEnd'] / 100 * maxindex), 1)
 
-        IndexOfNegitives = where(self.SS_Generation < 0)[0]
+    data = data[index]
+    return data
 
-        firstnegtive = where(IndexOfNegitives < maxindex)[0][-1]
-        lastnegtive = where(IndexOfNegitives > maxindex)[0][0]
-        self.index = arange(
-            IndexOfNegitives[firstnegtive], IndexOfNegitives[lastnegtive], 1)
-        # plot(self.Time,self.DeltaN_PL)
-        # show()
 
-        # IndexOfNegitives,maxindex,self.DeltaN_PL[IndexOfNegitives[firstnegtive]]
+def bin_named_array(data, no_pts_bnd):
+    '''
+    Binnes a named around the provided amount
+    '''
 
-        #self.DeltaN_PL = self.DeltaN_PL [ self.index]
-        #self.DeltaN_PC = self.DeltaN_PC [ self.index]
-        self.SS_Generation = self.SS_Generation[self.index]
-        self.Time = self.Time[self.index]
+    if len(data.dtype.names) != 1:
+        data2 = np.copy(data)[::no_pts_bnd]
 
-        self.RawPCDataEdited = self.RawPCDataEdited[self.index]
-        self.Raw_PLEdited = self.Raw_PLEdited[self.index]
+    for i in data.dtype.names:
+        for j in range(data.shape[0] // no_pts_bnd):
 
-    def Cropping_Percentage(self):
-        # this just uses that when points are negitive they should no longer be
-        # used
-        maxindex = amax(self.Data.shape)
+            data2[i][j] = np.mean(
+                data[i][j * no_pts_bnd:(j + 1) * no_pts_bnd], axis=0)
 
-        self.index = arange(int(self.Wafer[
-                            'CropStart'] / 100 * maxindex), int(self.Wafer['CropEnd'] / 100 * maxindex), 1)
+    return data2
 
-        self.Data = self.Data[self.index]
 
-    def EQE(self):
+def _background_correction(data_in, wafer_inf, bkg_percent=0.95):
+    '''
+    Background corrects the data
+    '''
+    Data = np.copy(data_in)
+    if 'bkh_pl' in wafer_inf:
 
-        return self.RawPCDataEdited / self.Generation('PC'), self.Raw_PLEdited / self.Generation('PL') * self.Ai
+        for name in data_in.dtype.names:
+            if name in ['PL', 'Gen']:
+                Data[name] -= wafer_inf['bkg_' + name.lower()]
+            elif name in ['PC']:
+                Data[name] = CQ.pc_from_voltage(Data[name], wafer_inf['Quad'],
+                                                wafer_inf['Lin'], wafer_inf['Const'])
 
-    def IQE_SingleIntensity(self):
+                DarkConductance = CQ.pc_from_voltage(wafer_inf['bkg_' + name.lower()],
+                                                     wafer_inf['Quad'],
+                                                     wafer_inf['Lin'], wafer_inf['Const'])
 
-        idx = find_nearest(self.Generation('PL'), 2.5e17 / self.Thickness / 10)
-        return self.RawPCDataEdited[idx] / self.Generation('PC')[idx], self.Raw_PLEdited[idx] / self.Generation('PL')[idx] * self.Ai
+                Data[name] -= DarkConductance
 
-    def Binning_Named(self, data, BinAmount):
+    else:
+        bkg_index = int(data_in.shape[0] * bkg_percent)
+        for name in data_in.dtype.names:
+            if name in ['PL', 'Gen']:
+                Data[name] -= np.average(Data[name][bkg_index:])
 
-        if len(data.dtype.names) != 1:
-            data2 = copy(data)[::BinAmount]
+            elif name in ['PC']:
+                Data[name] = CQ.pc_from_voltage(Data[name], wafer_inf['Quad'],
+                                                wafer_inf['Lin'], wafer_inf['Const'])
 
-        for i in data.dtype.names:
-            for j in range(data.shape[0] // BinAmount):
+                DarkConductance = np.average(Data['PC'][bkg_index:])
+                Data[name] -= DarkConductance
 
-                data2[i][j] = mean(
-                    data[i][j * BinAmount:(j + 1) * BinAmount], axis=0)
+        return Data, DarkConductance
 
-        return data2
+
+def _cropping_index(data, wafer_inf):
+    '''
+    Tries to find the cropping based on the noise in the PL channel
+    '''
+
+    if wafer_inf['cropStart'] == None and wafer_inf['cropStart'] == None:
+        if 'bkg_pl_std' in wafer_inf:
+            index = data['PL'] > wafer_inf['bkg_pl_std'] * 7
+
+            indexs = np.linspace(0, 1, data['PL'].shape[0])
+            wafer_inf['cropStart'], wafer_inf[
+                'cropEnd'] = indexs[index][[0, -1]] * 100
+        else:
+
+            wafer_inf['cropStart'], wafer_inf['cropEnd'] = 5, 95

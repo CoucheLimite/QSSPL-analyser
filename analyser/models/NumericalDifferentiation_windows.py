@@ -11,7 +11,8 @@
 #-------------------------------------------------------------------------------
 #!/usr/bin/env pytho
 #import numpy as np
-from numpy import linspace, matrix,interp,zeros,float
+import numpy as np
+
 import scipy.sparse as SS
 from scipy.sparse.linalg import spsolve
 #from matplotlib import  *
@@ -21,7 +22,7 @@ class Finite_Difference():
 
     def TwoPointCentral(self,x,y):
 #2-point formula
-        dyf = zeros(x.shape[0])
+        dyf = np.zeros(x.shape[0])
         for i in range(y.shape[0]-1):
             dyf[i] = (y[i+1] - y[i])/(x[i+1]-x[i])
 #set last element by backwards difference
@@ -44,7 +45,7 @@ class Finite_Difference():
         and y[-1] and y[-2] must be defined by lower order methods
         '''
 
-        dy = zeros(y.shape,float) #we know it will be this size
+        dy = np.zeros(y.shape,np.float) #we know it will be this size
         h = x[1]-x[0] #this assumes the points are evenely spaced!
         dy[2:-2] = (y[0:-4] - 8*y[1:-3] + 8*y[3:-1] - y[4:])/(12.*h)
 
@@ -59,22 +60,22 @@ class Regularisation():
     """Provides the first derivitave of something, WITH EQUALLY SPACED POINTS"""
     def FirstDerivative(self,X,Y,lam):
 
-        Xreal = matrix(X).T
-        Yreal =self.DerivitiveMatrix(1,Xreal[1]-Xreal[0],matrix(Y).T.shape[0])* matrix(Y).T
+        Xreal = np.matrix(X).T
+        Yreal =self.Derivitivematrix(1,Xreal[1]-Xreal[0],np.matrix(Y).T.shape[0])* np.matrix(Y).T
 
-        #obtaining Differential matrix
-        D=self.DerivitiveMatrix(2,Xreal[1]-Xreal[0],Yreal.shape[0])
+        #obtaining Differential np.matrix
+        D=self.Derivitivematrix(2,Xreal[1]-Xreal[0],Yreal.shape[0])
 
         #print X.shape,self.Smoothed(lam,Yreal,D).shape,(X[:-1]+X[1:]).shape
-        return interp(X,(X[:-1]+X[1:])/2,self.Smoothed(lam,Yreal,D)) #usually would lose a point, as evaultes inbetween points, so conver back to total number, with error at the end areas
+        return np.interp(X,(X[:-1]+X[1:])/2,self.Smoothed(lam,Yreal,D)) #usually would lose a point, as evaultes inbetween points, so conver back to total number, with error at the end areas
 
-    def DerivitiveMatrix(self,Order,Deltax,n):
+    def Derivitivematrix(self,Order,Deltax,n):
 
         #Have to use SS as numpy can't deal with these big arrays.
         #Also its a smaller demand on the system as it only records/does opperations of values with number
         D= -SS.eye(n-1,n)+SS.eye(n-1,n,1)
 
-        #Computing the correct Order (the order is the differential to make smooth) Matrix
+        #Computing the correct Order (the order is the differential to make smooth) np.matrix
         #It should be 2 orders higher than the higest differential you are going to use
         for i in range(1,Order):
             D= D[:-1,:-i]*D
@@ -93,30 +94,29 @@ class Regularisation():
 
 
 
-#Comparing
-'''
-X = linspace(-10,10,10000)
+if __name__ =='__main__':
+    #Comparing
+    import matplotlib.pylab as plt
 
-Y =     -X**5   +4*X**4    +5e1*X**3   -1e2*X**2   +5e2*X   + 1e4
-Yd =    -5*X**4 +16*X**3   +1.5e2*X**2   -2e2*X      +5e2
+    X = np.linspace(-10,10,10000)
 
-#Y = exp(X/0.02585)
-#Yd = exp(X/0.02585)/0.02585
+    Y =     -X**5   +4*X**4    +5e1*X**3   -1e2*X**2   +5e2*X   + 1e4
+    Yd =    -5*X**4 +16*X**3   +1.5e2*X**2   -2e2*X      +5e2
 
-
-plot(X,Regularisation().FirstDerivative(X,Y,0),'b--',label='Regularisation Derivative')
-ax.plot(X,Finite_Difference().TwoPointCentral(X,Y),'r-.',label='Two Point Finite Difference')
-#ax.plot(X,Finite_Difference().FourPointCentral(X,Y),'r-.',label='Four Point Finite Difference')
-#ax.plot(X,Yd,'g--',label='Real derivative')
-#grid(True,'major')
-#legend(loc=2)
-#semilogy()
-#twinx()
-#plot(X,Y,'k,',label='Original function')
-#legend(loc=1)
-#semilogy()
-
-show()
-'''
+    #Y = exp(X/0.02585)
+    #Yd = exp(X/0.02585)/0.02585
 
 
+    # plt.plot(X,Regularisation().FirstDerivative(X,Y,0),'b--',label='Regularisation Derivative')
+    plt.plot(X,Yd,'b-',label='Real derivative')
+    plt.plot(X,Finite_Difference().TwoPointCentral(X,Y),'r--',label='Two Point Finite Difference')
+    plt.plot(X,Finite_Difference().FourPointCentral(X,Y),'g-.',label='Four Point Finite Difference')
+    #grid(True,'major')
+    plt.legend(loc=2)
+    #semilogy()
+    #twinx()
+    #plot(X,Y,'k,',label='Original function')
+    #legend(loc=1)
+    #semilogy()
+
+    plt.show()

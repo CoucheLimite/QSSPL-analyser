@@ -2,7 +2,7 @@
 
 from semiconductor.electrical.mobility import Mobility
 from semiconductor.electrical.ionisation import Ionisation as Ion
-from semiconductor.material.ni import IntrinsicCarrierDensity as NI
+from semiconductor.material.intrinsic_carrier_density import IntrinsicCarrierDensity as NI
 from semiconductor.recombination.intrinsic import Radiative
 
 
@@ -17,9 +17,9 @@ class models_handeller():
     def __init__(self):
         self._get_available_models()
         self.selected_model = {'ni': 'Couderc_2014',
-                               'mobility': 'klaassen_1992',
-                               'ionisation': 'Altermatt2006_table1',
-                               'B': 'Altermatt2005'
+                               'mobility': 'Klaassen_1992',
+                               'ionisation': 'Altermatt_2006_table1',
+                               'B': 'Altermatt_2005'
                                }
         self._update_update()
 
@@ -63,7 +63,7 @@ class models_handeller():
             'B': Radiative(
                 material=self.material,
                 author=self.selected_model['B'],
-            )._get_B
+            ).get_B
         }
 
     def _auto_select_models(self):

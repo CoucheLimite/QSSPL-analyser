@@ -3,6 +3,30 @@ import numpy as np
 import scipy.constants as C
 
 
+def pc_from_voltage(V, a, b, c):
+    return a * V * V + b * V + c
+
+
+def doping_from_pc(darkconductance, wafer_inf, model_handeller):
+    '''
+    This doesn't work as we don't know the air value
+    '''
+    if 'air_conductance' in wafer_inf:
+        wafer_inf['doping_pc'] = 1e16
+        for i in range(5):
+            if wafer_inf['doping_type'] == 'p':
+                Na = wafer_inf['doping_pc']
+                Nd = 0
+            else:
+                Nd = wafer_inf['doping_pc']
+                Na = 0
+
+            wafer_inf['doping_pc'] = darkconductance / C.e / model_handeller.update['mobility'](
+                nxc=0,
+                Na=Na, Nd=Nd,
+                temp=wafer_inf['Temp'])
+
+
 def nxc_from_photoconductance(conductance,
                               wafer_thickness,
                               wafer_temp,
@@ -52,7 +76,8 @@ def nxc_from_photoconductance(conductance,
 def nxc_from_photoluminescence(photoluminescence,
                                Ai,
                                dopant,
-                               net_dopants,
+                               Na,
+                               Nd,
                                wafer_temp,
                                model_handeller):
     '''
@@ -65,20 +90,18 @@ def nxc_from_photoluminescence(photoluminescence,
         #
         nxc = np.ones(photoluminescence.shape[0]) * 1e10
         i = 1
-        while (i > 0.01):
+        while (i > 0.001):
 
             idop = model_handeller.update['ionisation'](
-                N_dop=net_dopants, nxc=nxc, impurity=dopant,
+                N_dop=abs(Na - Nd), nxc=nxc, impurity=dopant,
                 temp=wafer_temp)
 
-            maj_car_den = idop
-
             B = model_handeller.update['B'](
-                nxc=nxc, doping=idop, temp=wafer_temp)
+                nxc=nxc, Na=Na, Nd=Nd, temp=wafer_temp)
 
-            temp = (-maj_car_den +
+            temp = (-idop +
                     np.sqrt(np.absolute(
-                        (maj_car_den)**2 + 4 * photoluminescence * Ai / B))) / 2
+                        (idop)**2 + 4 * photoluminescence * Ai / B))) / 2
 
             i = np.average(np.absolute(temp - nxc) / nxc)
             nxc = temp
