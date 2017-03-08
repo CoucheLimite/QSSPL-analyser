@@ -1,5 +1,6 @@
 
 
+# import numpy as np
 from numpy import *
 import matplotlib.pylab as plt
 
@@ -154,18 +155,20 @@ class Data():
         self.Data = self.Binning_Named(self.Data, self.Wafer['Binning'])
 
         model_handeller._update_update()
-        self.DeltaN_PC = CQ.nxc_from_photoconductance(
-            self.Data['PC'],
-            self.Wafer['Thickness'],
-            self.Wafer['Temp'],
-            self.ne0,
-            self.nh0,
-            model_handeller)
 
         if self.Wafer['Type'] == 'n':
             dopant = 'phosphorous'
         elif self.Wafer['Type'] == 'p':
             dopant = 'boron'
+
+        self.DeltaN_PC = CQ.nxc_from_photoconductance(
+            self.Data['PC'],
+            self.Wafer['Thickness'],
+            self.Wafer['Temp'],
+            dopant,
+            self.ne0,
+            self.nh0,
+            model_handeller)
 
         self.DeltaN_PL = CQ.nxc_from_photoluminescence(
             self.Data['PL'],
@@ -272,13 +275,23 @@ class Data():
 
     def Binning_Named(self, data, BinAmount):
 
+        # create a new array
         if len(data.dtype.names) != 1:
-            data2 = copy(data)[::BinAmount]
+            # ensures that the array has the right number of values
+            num = data.shape[0] // BinAmount
+            data2 = copy(data)[0:num * BinAmount:BinAmount]
+
+        # make sure that the lengths aren't too long
+        assert data.shape[0] >= data2.shape[0] * BinAmount
+        print data.shape[0], data2.shape, BinAmount, data2.shape[0] * BinAmount
+        print data['PL'][(num - 1) * BinAmount:(num) * BinAmount].shape
+        print mean(data['PL'][(num - 1) * BinAmount:(num) * BinAmount])
 
         for i in data.dtype.names:
-            for j in range(data.shape[0] // BinAmount):
-
+            for j in range(num):
                 data2[i][j] = mean(
-                    data[i][j * BinAmount:(j + 1) * BinAmount], axis=0)
+                    data[i][j * BinAmount:(j + 1) * BinAmount])
+
+        print(data2['PL'][-1])
 
         return data2
