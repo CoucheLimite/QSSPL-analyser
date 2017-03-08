@@ -827,7 +827,6 @@ class Analyser(wx.Frame):
                 i + str(self.DataSet)).SetValue(
                 '{0:.2e}'.format(self.Files[self.DataSet].Wafer[i]))
 
-        print self.Files[self.DataSet].Wafer.keys()
         for i in ['Reflection', 'CropStart', 'CropEnd', 'Binning', 'Temp']:
             self.waferdetails.FindWindowByName(
                 i + str(self.DataSet)).SetValue(

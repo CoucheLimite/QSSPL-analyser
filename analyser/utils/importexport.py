@@ -361,6 +361,7 @@ class Load_QSSPL_File_Python():
             s = f.read()
 
         s = s.replace('\n\n', '\n')
+
         for i in s.split('\n')[2:-1]:
             try:
                 List[i.split(':\t')[0].strip()] = self.num(i.split(':\t')[1])

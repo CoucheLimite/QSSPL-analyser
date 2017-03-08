@@ -88,7 +88,6 @@ class Data():
         self.RawData = self.LD.Load_RawData_File()
         self.RawData2 = copy(self.RawData)
         self.Wafer = self.LD.Load_InfData_File()
-        print(self.Wafer)
 
     def ChoosingDefultCropValues(self):
 
@@ -283,15 +282,10 @@ class Data():
 
         # make sure that the lengths aren't too long
         assert data.shape[0] >= data2.shape[0] * BinAmount
-        print data.shape[0], data2.shape, BinAmount, data2.shape[0] * BinAmount
-        print data['PL'][(num - 1) * BinAmount:(num) * BinAmount].shape
-        print mean(data['PL'][(num - 1) * BinAmount:(num) * BinAmount])
 
         for i in data.dtype.names:
             for j in range(num):
                 data2[i][j] = mean(
                     data[i][j * BinAmount:(j + 1) * BinAmount])
-
-        print(data2['PL'][-1])
 
         return data2
