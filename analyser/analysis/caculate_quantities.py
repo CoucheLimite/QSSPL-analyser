@@ -7,8 +7,7 @@ def nxc_from_photoconductance(conductance,
                               wafer_thickness,
                               wafer_temp,
                               dopant,
-                              ne0,
-                              nh0,
+                              Ndop,
                               model_handeller):
     '''
     Calculates the excess carrier density per cm^-3 from a photoconductance
@@ -16,7 +15,6 @@ def nxc_from_photoconductance(conductance,
 
     #
     nxc = np.ones(conductance.shape[0]) * 1e10
-    Na, Nd = ne0, nh0
 
     error = 1
     while (error > 0.01):
@@ -30,14 +28,14 @@ def nxc_from_photoconductance(conductance,
         # current just on the number of dopants
         if dopant == 'boron':
             iNa = model_handeller.update['ionisation'](
-                N_dop=Na, nxc=nxc, impurity='boron',
+                N_dop=Ndop, nxc=nxc, impurity='boron',
                 temp=wafer_temp)
 
             iNd = 0
 
         elif dopant == 'phosphorous':
             iNd = model_handeller.update['ionisation'](
-                N_dop=Nd, nxc=nxc, impurity='phosphorous',
+                N_dop=Ndop, nxc=nxc, impurity='phosphorous',
                 temp=wafer_temp)
 
             iNa = 0

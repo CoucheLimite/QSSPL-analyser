@@ -165,8 +165,7 @@ class Data():
             self.Wafer['Thickness'],
             self.Wafer['Temp'],
             dopant,
-            self.ne0,
-            self.nh0,
+            self.Wafer['Doping'],
             model_handeller)
 
         self.DeltaN_PL = CQ.nxc_from_photoluminescence(
