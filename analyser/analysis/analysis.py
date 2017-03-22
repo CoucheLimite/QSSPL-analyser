@@ -298,8 +298,8 @@ class Data():
                                   Fs=self.mmt_inf['Fs'],
                                   Na=self.Na,
                                   Nd=self.Nd,
-                                  dopant=self.sample_inf['dopant']
-                                  temp=self.sample_inf['temp']
+                                  dopant=self.sample_inf['dopant'],
+                                  temp=self.sample_inf['temp'],
                                   model_handeller=model_handeller)
 
         return Ai

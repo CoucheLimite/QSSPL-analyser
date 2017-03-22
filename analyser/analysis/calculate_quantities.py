@@ -56,8 +56,11 @@ def number_of_carriers(Na, Nd, nxc, temp, model_handeller):
                                ni_author=model_handeller.selected_model[
                                    'ni'],
                                ionisation_author=model_handeller.selected_model[
+                                   'ionisation']
+                               )
 
     return ne0, nh0
+
 
 def pc_from_voltage(V, quad, lin, constant):
     '''
@@ -104,46 +107,44 @@ def doping_from_pc(darkconductance, dark_voltage, temp, quad, lin, constant, dop
             The doping of the wafer
     '''
 
-    DC=darkconductance - pc_from_voltage(dark_voltage,
+    DC = darkconductance - pc_from_voltage(dark_voltage,
                                            quad,
                                            lin,
                                            const)
 
     # assume a doping
-    doping_DC=1e16
+    doping_DC = 1e16
 
     # get a mobility class ready.
-    mob=Mob(material='Si',
-            author=model_handeller.selected_model['mobility'],
-            temp=temp)
-
+    mob = Mob(material='Si',
+              author=model_handeller.selected_model['mobility'],
+              temp=temp)
 
     for i in range(5):
 
         # get the number of dopants
-        Na, Nd, dopant=background_doping(doping_type, doping_DC, temp)
+        Na, Nd, dopant = background_doping(doping_type, doping_DC, temp)
         # then the number of carriers in the dark
-        ne0, nh0=number_of_carriers(Na, Nd, 0, temp, model_handeller)
+        ne0, nh0 = number_of_carriers(Na, Nd, 0, temp, model_handeller)
 
         # calculate the mobility
-        mob_e=mob.electron_mobility(nxc=0,
-                                           Na=Na,
-                                           Nd=Nd
-                                           )
-        mob_h=mob.hole_mobility(nxc=0,
-                                       Na=Na,
-                                       Nd=Nd)
+        mob_e = mob.electron_mobility(nxc=0,
+                                      Na=Na,
+                                      Nd=Nd
+                                      )
+        mob_h = mob.hole_mobility(nxc=0,
+                                  Na=Na,
+                                  Nd=Nd)
 
         # The conductivity is
         # cond=C.e * (mob_e * ne + mob_h * nh)
         # so rarranging provides
         if dopant == 'boron':
-            doping_DC=(DC / C.e - mob_e * ne0) / mob_h
+            doping_DC = (DC / C.e - mob_e * ne0) / mob_h
         elif dopant == 'phosphorous':
-            doping_DC=(DC / C.e - mob_h * nh0) / mob_h
+            doping_DC = (DC / C.e - mob_h * nh0) / mob_h
 
     return doping_DC
-
 
 
 def nxc_from_photoconductance(conductance,
@@ -156,35 +157,35 @@ def nxc_from_photoconductance(conductance,
     Calculates the excess carrier density per cm^-3 from a photoconductance
     '''
 
-    nxc=np.ones(conductance.shape[0]) * 1e10
+    nxc = np.ones(conductance.shape[0]) * 1e10
 
-    error=1
+    error = 1
     while (error > 0.01):
         # assumption: no co-doping
 
         if dopant == 'boron':
-            iNa=model_handeller.update['ionisation'](
+            iNa = model_handeller.update['ionisation'](
                 N_dop=Ndop, nxc=nxc, impurity='boron',
                 temp=temp)
 
-            iNd=0
+            iNd = 0
 
         elif dopant == 'phosphorous':
-            iNd=model_handeller.update['ionisation'](
+            iNd = model_handeller.update['ionisation'](
                 N_dop=Ndop, nxc=nxc, impurity='phosphorous',
                 temp=temp)
 
-            iNa=0
+            iNa = 0
 
-        temp=conductance / C.e / thickness\
+        temp = conductance / C.e / thickness\
             / model_handeller.update['mobility'](
                 nxc=nxc,
                 Na=iNa, Nd=iNd,
                 temp=temp)
 
-        error=np.average(np.absolute(temp - nxc) / nxc)
+        error = np.average(np.absolute(temp - nxc) / nxc)
 
-        nxc=temp
+        nxc = temp
 
     return nxc
 
@@ -204,25 +205,26 @@ def nxc_from_photoluminescence(photoluminescence,
         return photoluminescence
     else:
         #
-        nxc=np.ones(photoluminescence.shape[0]) * 1e10
-        i=1
+        nxc = np.ones(photoluminescence.shape[0]) * 1e10
+        i = 1
         while (i > 0.001):
 
-            idop=model_handeller.update['ionisation'](
+            idop = model_handeller.update['ionisation'](
                 N_dop=abs(Na - Nd), nxc=nxc, impurity=dopant,
                 temp=temp)
 
-            B=model_handeller.update['B'](
+            B = model_handeller.update['B'](
                 nxc=nxc, Na=Na, Nd=Nd, temp=temp)
 
-            _temp=(-idop +
-                    np.sqrt(np.absolute(
-                        (idop)**2 + 4 * photoluminescence * Ai / B))) / 2
+            _temp = (-idop +
+                     np.sqrt(np.absolute(
+                         (idop)**2 + 4 * photoluminescence * Ai / B))) / 2
 
-            i=np.average(np.absolute(_temp - nxc) / nxc)
-            nxc=_temp
+            i = np.average(np.absolute(_temp - nxc) / nxc)
+            nxc = _temp
 
         return nxc
+
 
 def ni(temp, model_handeller):
     '''
@@ -234,8 +236,8 @@ def ni(temp, model_handeller):
         model_handeller: (object)
                 A instance of models.models.models_handeller
     '''
-        ni=model_handeller.update[
-            'ni'](temp=temp)
+    ni = model_handeller.update[
+        'ni'](temp=temp)
     return ni
 
 
@@ -243,14 +245,14 @@ def iVoc_from_carriers(ne0, nh0, nxc, temp, ni):
     '''
     calculates the implied voltage from the number of carriers
     '''
-    ne=ne0 + nxc
-    nh=nh0 + nxc
+    ne = ne0 + nxc
+    nh = nh0 + nxc
     return C.k * temp / C.e * np.log(ne * nh / np.power(ni, 2))
 
 
 def generation(time, gen_norm, nxc, analysis_type, thickness=None, reflection=None, Fs=None):
 
-    function={
+    function = {
         'generalised': _generation_generalised,
         'ss': _generation_steady_state,
         'trans': _generation_transient,
@@ -258,28 +260,28 @@ def generation(time, gen_norm, nxc, analysis_type, thickness=None, reflection=No
 
     assert analysis_type in function
     if anal_type == 'trans':
-        gen=function[anal_type](time, gen_norm, nxc)
+        gen = function[anal_type](time, gen_norm, nxc)
     else:
-        gen=function[anal_type](
+        gen = function[anal_type](
             time, gen_norm, nxc, thickness, reflection, Fs)
 
     return gen
 
 
 def _generation_steady_state(time, gen_norm, nxc, thickness, reflection, Fs):
-    transmission=(1 - wafer_inf['reflection'] / 100.)
+    transmission = (1 - wafer_inf['reflection'] / 100.)
     return gen_V * wafer_inf['Fs'] * transmission / wafer_inf['thickness']
 
 
 def _generation_generalised(time, gen_norm, nxc, thickness, reflection, Fs):
 
-    gen=_generation_steady_state(time, gen_V, nxc, thickness, reflection, Fs
+    gen = _generation_steady_state(time, gen_V, nxc, thickness, reflection, Fs
                                    ) + _generation_transient(time, gen_V, nxc)
 
     return gen
 
 
 def _generation_transient(time, gen_norm, nxc, **args):
-    gen=-FourPointCentral(time,
+    gen = -FourPointCentral(time,
                             nxc)
     return gen
