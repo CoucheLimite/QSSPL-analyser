@@ -41,11 +41,11 @@ class Data():
         pass
 
     def BackgrounConcentration(self):
-        if (self.Type == 'p'):
+        if (self.Wafer['Type'] == 'p'):
             self.nh0 = self.Wafer['Doping']
             self.ne0 = self.ni**2 / self.Wafer['Doping']
 
-        elif(self.Type == 'n'):
+        elif(self.Wafer['Type'] == 'n'):
             self.ne0 = self.Wafer['Doping']
             self.nh0 = self.ni**2 / self.Wafer['Doping']
         else:
