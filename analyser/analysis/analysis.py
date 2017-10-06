@@ -23,7 +23,6 @@ class Data():
 
     Derivitive = 'Finite Difference'
     Analysis = 'Generalised'
-    Type = 'p'
     CropStart = 0
     CropEnd = 100
     BackgroundSubtraction = 0.95
